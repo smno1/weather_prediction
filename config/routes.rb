@@ -1,7 +1,13 @@
 Rails.application.routes.draw do
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
-
+    get '/weather/locations', to: 'data#locations' 
+    get '/weather/data/:location_id/:date', to: 'data#location_weather', constraints: {location_id: /[a-zA-Z_]+/, date: /(\d{2}-){2}\d{4}/} 
+    get '/weather/data/:post_code/:date', to: 'data#postcode_weather', constraints: {post_code: /3\d{3}/, date: /(\d{2}-){2}\d{4}/} 
+    get '/weather/prediction/:post_code/:period', to: 'prediction#postcode_weather', constraints: {post_code: /3\d{3}/, period: /10|30|60|120|180/} 
+    get '/weather/prediction/:lat/:long/:period', to: 'prediction#coordinate_weather', constraints: {period: /10|30|60|120|180/} 
+  
+  
   # You can have the root of your site routed with "root"
   # root 'welcome#index'
 
