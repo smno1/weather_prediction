@@ -45,8 +45,9 @@ ActiveRecord::Schema.define(version: 20150516005454) do
   create_table "weather_data_recordings", force: :cascade do |t|
     t.string   "condition"
     t.string   "location_id"
-    t.datetime "created_at",  null: false
-    t.datetime "updated_at",  null: false
+    t.datetime "recording_time"
+    t.datetime "created_at",     null: false
+    t.datetime "updated_at",     null: false
   end
 
   add_index "weather_data_recordings", ["location_id"], name: "index_weather_data_recordings_on_location_id"
