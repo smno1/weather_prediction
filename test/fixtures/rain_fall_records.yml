@@ -1,0 +1,9 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  precip_amount: 1.5
+  weather_data_recording_id: 
+
+two:
+  precip_amount: 1.5
+  weather_data_recording_id: 

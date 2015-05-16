@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  win_dir: 1.5
+  win_speed: 1.5
+  weather_data_recording_id: 
+
+two:
+  win_dir: 1.5
+  win_speed: 1.5
+  weather_data_recording_id: 
