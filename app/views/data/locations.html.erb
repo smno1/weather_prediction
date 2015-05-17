@@ -1,1 +1,12 @@
-Location Page
+<% provide(:page_header,"Victoria Location")%>
+
+<div class='col-lg-12'>
+	<div class='panel panel-default'>
+		<div class='panel-heading'>
+			Victoria Post Code [3000-3999]
+		</div>
+		<div class='panel-body'>
+			<%= render :partial=>'simple_table', :locals => {:columns => @attributes, :rows=>@locations}%>
+		</div>
+	</div>
+</div>

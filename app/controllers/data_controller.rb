@@ -1,7 +1,8 @@
 class DataController < ApplicationController
   
   def locations
-    
+    @locations=Location.all
+    @attributes=["id","post_code","lat","lng"]
   end
 
   def location_weather
