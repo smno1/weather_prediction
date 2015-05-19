@@ -19,14 +19,15 @@ class Regression
 
   #------------------------------linear--------------------------------------------
   def linear x_data, y_data
+    temp = []
     x_vector = x_data.to_vector(:scale)
     y_vector = y_data.to_vector(:scale)
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     linear = Statsample::Regression.multiple(ds,'y')
-    output = "#{linear.coeffs.fetch("x"){|k|puts k}.round(2)}x + #{linear.constant.round(2)}".gsub(/\+ ?-/, '- ')
-    yield output if block_given?
+    temp[0] = linear.coeffs.fetch("x"){|k|puts k}.round(2)
+    temp[1] = linear.constant.round(2)
+    @linear_return = temp
     @se_linear = Math.sqrt(linear.mse.abs)
-  # puts @se_linear
   end
 
   #-------------------------polynomial regression——————————————————————————————————
@@ -126,10 +127,10 @@ class Regression
     index = mini_var.index(mini_var.min)
     case index
     when 0
+      @flag = "linear"
       linear(x_data, y_data){|output| puts output}
     when 1
       @flag = "poly"
-
     # polynomial(x_data, y_data){|output| puts output}
     when 2
       exponential(x_data, y_data){|output| puts output}
@@ -147,6 +148,8 @@ class Regression
         sum = (sum + x)*(x_data[-1] + 1)
       end
       @highest_temp = (sum/(x_data[-1] + 1))
+    elsif @flag.eql?("linear")
+      @highest_temp = @linear_return[0]*(x_data[-1] + 1) + @linear_return[1]
     end   
   end
   
@@ -160,19 +163,28 @@ class Regression
         @poly_return.each do |x|
           sum = (sum + x)*x_data[i]
         end
-        result[i] = (sum/x_data[i])
+        result[i] = sum/x_data[i]
         i += 1
       end
+      max_temp = result.max
+      sum = 0
+      @poly_return.each do |x|
+        sum = (sum + x)*time
+      end
+      temp_time = sum/time
+      @prediction = @highest_temp * (temp_time/max_temp)
+      puts "Here is the prediction: #{@prediction}"
+    elsif @flag.eql?("linear")
+      while i< x_data.length
+        result[i] = x_data[i]*@linear_return[0] + @linear_return[1]
+        i += 1
+      end
+      max_temp = result.max
+      temp_time =  time*@linear_return[0] + @linear_return[1]
+      @prediction = @highest_temp * (temp_time/max_temp)
+      puts "Here is the prediction: #{@prediction}"
     end
 
-    max_temp = result.max
-    sum = 0
-    @poly_return.each do |x|
-      sum = (sum + x)*time
-    end
-    temp_time = (sum/time)
-    @prediction = @highest_temp * (temp_time/max_temp)
-    puts "Here is the prediction: #{@prediction}"
   end
 
 end
@@ -187,7 +199,7 @@ regress_test = Regression.new
 x_data = []
 y_data = []
 time = 15
-CSV.foreach("input_1.txt", headers:true).each do |line|
+CSV.foreach("input_2.txt", headers:true).each do |line|
   y_data << line['datapoint'].to_f
   x_data << line['time'].to_f
 end
