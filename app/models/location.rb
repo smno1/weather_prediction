@@ -16,7 +16,7 @@ class Location < ActiveRecord::Base
   
   
   
-  def to_json
+  def self.to_json
     locations = Locations.all
     output_list = locations.map do |c|   
       {:id=>c.id, :lat=>c.lat,:lon=>c.lng,:last_update=>c.updated_at}
