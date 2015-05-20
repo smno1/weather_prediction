@@ -13,4 +13,28 @@ class Location < ActiveRecord::Base
   
   #find nearby location e.g.
   #Location.within(50,:origin=>[-36.9,146.7])
+  
+  
+  
+  def to_json
+    locations = Locations.all
+    output_list = locations.map do |c|   
+      {:id=>c.id, :lat=>c.lat,:lon=>c.lng,:last_update=>c.updated_at}
+    end
+    {:date=>Datetime.now,:locations=>output_list}
+  end
+
+
+  
+  def self.to_json_by_postcode_and_date post_code,date
+    output_list = Locations.where(:post_code=>post_code).map do |c|
+      measurement_list= c.weather_data_recordings.where(:recording_time between date.at_the_begin_of_day .. date.at_the_end_the_day).map do |p|
+        {:time=>p.recording_time,:temp=>p.temperature_record.cel_degree,:precip=>p.rain_fall_records.precip_amount,:wind_direction=>p.wind_records.win_dir,:wind_speed=>p.wind_records.win_speed}
+      end  
+     {:id=>c.id, :lat=>c.lat,:lon=>c.lng,:last_update=>c.updated_at,:measurements=>measurement_list}
+    end
+     {:date=>date,:locations=>output_list}
+  end
+  
+  
 end
