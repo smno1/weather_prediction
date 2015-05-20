@@ -8,11 +8,7 @@ class Regression
     @se_poly = +1.0/0.0
     @se_exp = +1.0/0.0
     @se_log = +1.0/0.0
-    @linear_return = []
-    @poly_return = []
-    @log_return = []
-    @exp_return = []
-    @prediction
+    @regress_return = []
     @flag = ""
     @highest_temp 
   end
@@ -26,7 +22,7 @@ class Regression
     linear = Statsample::Regression.multiple(ds,'y')
     temp[0] = linear.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = linear.constant.round(2)
-    @linear_return = temp
+    @regress_return = temp
     @se_linear = Math.sqrt(linear.mse.abs)
   end
 
@@ -63,52 +59,36 @@ class Regression
     (2..10).each{|x| array << (variation x_array, y_array, x)}
     index = (array.index(array.min) + 2)
     array1 = regress x_array, y_array, index
-    @poly_return = array1.reverse
-
-    k = index
-    poly_string = ""
-    while k >= 0
-      poly_string << "#{array1[k]}x^#{k} + " if (array1[k] != 0) && (k > 1)
-      poly_string << "#{array1[k]}x + " if k == 1
-      poly_string << "#{array1[k]} " if k == 0
-      k = k - 1
-    end
-    output = poly_string.gsub(/\+ ?-/, '- ')
-    yield output if block_given?
+    @regress_return = array1.reverse
     @se_poly = variation x_array, y_array, index
-  #  puts @se_poly
   end
 
   #————————————————————————————Exponential regression——————————————————————————————
   def exponential x_data, y_data
+    temp = []
     log_y1_data = y_data.map { |y| Math.log(y)}
     x_vector = x_data.to_vector(:scale)
     y_vector = log_y1_data.to_vector(:scale)
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     expon = Statsample::Regression.multiple(ds,'y')
-    output = "#{(Math.exp(expon.constant)).round(2)}*e^(#{expon.coeffs.fetch("x"){|k|puts k}.round(2)}x)"
-    yield output if block_given?
+    temp[0] = expon.coeffs.fetch("x"){|k|puts k}.round(2)
+    temp[1] = (Math.exp(expon.constant)).round(2)
+    @regress_return = temp
     @se_exp = Math.sqrt(expon.mse.abs)
-    #  puts @se_exp
-  rescue Math::DomainError
-    puts "Cannot perform exponential regression on this data"
     end
 
   #————————————————————————————Logarithmic regression——————————————————————————————
   def logarithmic x_data, y_data
-
+    temp = []
     log_x_data = x_data.map { |x| Math.log(x) }
     x_vector = log_x_data.to_vector(:scale)
     y_vector = y_data.to_vector(:scale)
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     log = Statsample::Regression.multiple(ds,'y')
-    # puts log.mse
-    output= "#{log.coeffs.fetch("x"){|k|puts k}.round(2)}*ln(x) + #{log.constant.round(2)}".gsub(/\+ ?-/, '- ')
-    yield output if block_given?
+    temp[0] = log.coeffs.fetch("x"){|k|puts k}.round(2)
+    temp[1] = log.constant.round(2)
+    @regress_return = temp
     @se_log = Math.sqrt(log.mse.abs)
-    #  puts @se_log
-  rescue Math::DomainError
-    puts "Cannot perform logarithmic regression on this data"
     end
 
   #-----------------------------best_fit-------------------------------------------------
@@ -119,11 +99,7 @@ class Regression
     exponential(x_data, y_data) if y_data.all?{|y| y>0 }
     logarithmic(x_data, y_data) if x_data.all?{|x| x>0 }
     mini_var << @se_exp
-    mini_var << @se_log
-    
-    # print mini_var
-    
-    
+    mini_var << @se_log       
     index = mini_var.index(mini_var.min)
     case index
     when 0
@@ -131,36 +107,39 @@ class Regression
       linear(x_data, y_data){|output| puts output}
     when 1
       @flag = "poly"
-    # polynomial(x_data, y_data){|output| puts output}
     when 2
-      exponential(x_data, y_data){|output| puts output}
+      @flag = "exp"
     when 3
-      logarithmic(x_data, y_data){|output| puts output}
+      @flag = "log"
     end
   end
 
-  def prediction_highTemp x_data, y_data
-    #例：x_data提供1，2，3，4，5.。。30 那么预测第30+1天的最高温
+  def prediction_highTemp x_data, y_data, offset_time
+    #例：x_data提供1，2，3，4，5.。。30 那么预测第30+offset_time天的最高温
     best_fit x_data, y_data
     if @flag.eql?("poly")
       sum = 0
-      @poly_return.each do |x|
-        sum = (sum + x)*(x_data[-1] + 1)
+      @regress_return.each do |x|
+        sum = (sum + x)*(x_data[-1] + offset_time)
       end
-      @highest_temp = (sum/(x_data[-1] + 1))
+      @highest_temp = sum/(x_data[-1] + offset_time)
     elsif @flag.eql?("linear")
-      @highest_temp = @linear_return[0]*(x_data[-1] + 1) + @linear_return[1]
-    end   
+      @highest_temp = @regress_return[0]*(x_data[-1] + offset_time) + @regress_return[1]
+    elsif @flag.eql?("log")
+      @highest_temp = @regress_return[0]*((Math.log(x_data[-1] + offset_time))-@regress_return[1])**2
+    elsif @flag.eql?("exp")
+      @highest_temp = Math.exp((x_data[-1] + offset_time) * @regress_return[0]) + @regress_return[1]
+    end  
   end
   
- def prediction_model x_data, y_data, time
+ def prediction_model x_data, y_data, period
     i = 0
     result = []
     best_fit x_data, y_data
     if @flag.eql?("poly")
       while i < x_data.length
         sum = 0
-        @poly_return.each do |x|
+        @regress_return.each do |x|
           sum = (sum + x)*x_data[i]
         end
         result[i] = sum/x_data[i]
@@ -168,54 +147,52 @@ class Regression
       end
       max_temp = result.max
       sum = 0
-      @poly_return.each do |x|
-        sum = (sum + x)*time
+      @regress_return.each do |x|
+        sum = (sum + x)*(x_data[-1]+period)
       end
-      temp_time = sum/time
+      temp_time = sum/(x_data[-1]+period)
       @prediction = @highest_temp * (temp_time/max_temp)
-      puts "Here is the prediction: #{@prediction}"
+      puts "Here is the poly prediction: #{@prediction}"
     elsif @flag.eql?("linear")
       while i< x_data.length
-        result[i] = x_data[i]*@linear_return[0] + @linear_return[1]
+        result[i] = x_data[i]*@regress_return[0] + @regress_return[1]
         i += 1
       end
       max_temp = result.max
-      temp_time =  time*@linear_return[0] + @linear_return[1]
+      temp_time =  (x_data[-1]+period)*@regress_return[0] + @regress_return[1]
       @prediction = @highest_temp * (temp_time/max_temp)
-      puts "Here is the prediction: #{@prediction}"
+      puts "Here is the linear prediction: #{@prediction}"
+    elsif @flag.eql?("log")
+      while i< x_data.length
+        result[i] = @regress_return[0]*((Math.log(x_data[i]))-@regress_return[1])**2
+        i += 1
+      end   
+      max_temp = result.max
+      temp_time = @regress_return[0]*((Math.log(x_data[-1]+period))-@regress_return[1])**2 
+      @prediction = @highest_temp * (temp_time/max_temp)
+      puts "Here is the log prediction: #{@prediction}"
+    elsif @flag.eql?("exp")
+      while i< x_data.length
+        result[i] = Math.exp(x_data[i]*@regress_return[0]) + @regress_return[1]
+        i += 1
+      end
+      max_temp = result.max
+      temp_time = Math.exp((x_data[-1] + period) * @regress_return[0]) + @regress_return[1]
+      @prediction = @highest_temp * (temp_time/max_temp)
+      puts "Here is the exp prediction: #{@prediction}"
     end
-
   end
-
 end
 
-#-----------------------------prediction------------------------------------------------------
-
-
-
 #---------------------------end of class----------------------------------------------------
-
 regress_test = Regression.new
 x_data = []
 y_data = []
 time = 15
-CSV.foreach("input_2.txt", headers:true).each do |line|
+CSV.foreach("input_3.txt", headers:true).each do |line|
   y_data << line['datapoint'].to_f
   x_data << line['time'].to_f
 end
 
-regress_test.prediction_highTemp x_data, y_data
+regress_test.prediction_highTemp x_data, y_data, time
 regress_test.prediction_model x_data, y_data, time
-
-# case ARGV[1]
-# when "linear"
-  # regress_test.linear(x_data, y_data) {|output| puts output}
-# when "polynomial"
-  # regress_test.polynomial(x_data, y_data) {|output| puts output}
-# when "exponential"
-  # regress_test.exponential(x_data, y_data) {|output| puts output}
-# when "logarithmic"
-  # regress_test.logarithmic(x_data, y_data) {|output| puts output}
-# when "best_fit"
-  # regress_test.best_fit(x_data, y_data)
-# end
