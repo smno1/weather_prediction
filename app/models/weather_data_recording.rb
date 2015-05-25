@@ -56,4 +56,3 @@ class WeatherDataRecording < ActiveRecord::Base
   
   
 end
-
