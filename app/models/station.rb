@@ -1,5 +1,5 @@
 class Station < ActiveRecord::Base
-  acts_as_mappable
+  acts_as_mappable :distance_field_name => :distance
   
   def self.get_data
     doc = Nokogiri::HTML(open(  'http://www.bom.gov.au/vic/observations/vicall.shtml#WIM'))
@@ -14,6 +14,9 @@ class Station < ActiveRecord::Base
           a = result["observations"]
           b = a["data"]
           c = a["header"]
+          puts "======5 c============"
+          puts c.first(5)
+          puts b.first
         # c.each do |station|
         # Station.create(:station_name =>station.fetch("name"))
         # end

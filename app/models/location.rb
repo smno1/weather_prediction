@@ -2,7 +2,8 @@ require 'csv'
 
 class Location < ActiveRecord::Base
   self.primary_key = :id
-  acts_as_mappable
+  acts_as_mappable :distance_field_name => :distance
+
 
   def self.import_location_data
     location_array=Array.new

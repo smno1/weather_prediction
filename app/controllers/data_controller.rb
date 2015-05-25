@@ -12,6 +12,10 @@ class DataController < ApplicationController
   
   def location_weather
     @location_id=params[:location_id]
+    l=Location.find(@location_id)
+    @nearest_station=Station.closest(:origin => [l.lat,l.lng]).first
+    @distances=@nearest_station.distance_from([l.lat,l.lng],:units=>:miles)
+    
     @date=params[:date]
     respond_to do |format|
       format.html
