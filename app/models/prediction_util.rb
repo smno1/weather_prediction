@@ -10,7 +10,8 @@ class Regression
     @se_log = +1.0/0.0
     @regress_return = []
     @flag = ""
-    @highest_temp 
+    @highest_temp = ""
+    @prediction = []
   end
 
   #------------------------------linear--------------------------------------------
@@ -20,6 +21,7 @@ class Regression
     y_vector = y_data.to_vector(:scale)
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     linear = Statsample::Regression.multiple(ds,'y')
+    puts linear.r2_adjusted()
     temp[0] = linear.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = linear.constant.round(2)
     @regress_return = temp
@@ -71,11 +73,12 @@ class Regression
     y_vector = log_y1_data.to_vector(:scale)
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     expon = Statsample::Regression.multiple(ds,'y')
+    puts expon.r2_adjusted()
     temp[0] = expon.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = (Math.exp(expon.constant)).round(2)
     @regress_return = temp
     @se_exp = Math.sqrt(expon.mse.abs)
-    end
+  end
 
   #————————————————————————————Logarithmic regression——————————————————————————————
   def logarithmic x_data, y_data
@@ -85,11 +88,12 @@ class Regression
     y_vector = y_data.to_vector(:scale)
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     log = Statsample::Regression.multiple(ds,'y')
+    puts log.r2_adjusted()
     temp[0] = log.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = log.constant.round(2)
     @regress_return = temp
     @se_log = Math.sqrt(log.mse.abs)
-    end
+  end
 
   #-----------------------------best_fit-------------------------------------------------
   def best_fit x_data, y_data
@@ -99,12 +103,11 @@ class Regression
     exponential(x_data, y_data) if y_data.all?{|y| y>0 }
     logarithmic(x_data, y_data) if x_data.all?{|x| x>0 }
     mini_var << @se_exp
-    mini_var << @se_log       
+    mini_var << @se_log
     index = mini_var.index(mini_var.min)
     case index
     when 0
       @flag = "linear"
-      linear(x_data, y_data){|output| puts output}
     when 1
       @flag = "poly"
     when 2
@@ -129,10 +132,15 @@ class Regression
       @highest_temp = @regress_return[0]*((Math.log(x_data[-1] + offset_time))-@regress_return[1])**2
     elsif @flag.eql?("exp")
       @highest_temp = Math.exp((x_data[-1] + offset_time) * @regress_return[0]) + @regress_return[1]
-    end  
+    end
   end
-  
- def prediction_model x_data, y_data, period
+
+  def prediction_model x_data, y_data, period
+    now=Time.now
+    hour = now.hour
+    min = now.min%10
+    now_formatedtime = 144*hour/24 + min
+    period = period/10
     i = 0
     result = []
     best_fit x_data, y_data
@@ -146,12 +154,15 @@ class Regression
         i += 1
       end
       max_temp = result.max
-      sum = 0
-      @regress_return.each do |x|
-        sum = (sum + x)*(x_data[-1]+period)
+
+      (1..period).each do |p|
+        sum = 0
+        @regress_return.each do |x|
+          sum = (sum + x)*(now_formatedtime + p)
+        end
+        temp_time = sum/(now_formatedtime + p)
+        @prediction << @highest_temp * (temp_time/max_temp)
       end
-      temp_time = sum/(x_data[-1]+period)
-      @prediction = @highest_temp * (temp_time/max_temp)
       puts "Here is the poly prediction: #{@prediction}"
     elsif @flag.eql?("linear")
       while i< x_data.length
@@ -159,17 +170,25 @@ class Regression
         i += 1
       end
       max_temp = result.max
-      temp_time =  (x_data[-1]+period)*@regress_return[0] + @regress_return[1]
-      @prediction = @highest_temp * (temp_time/max_temp)
+
+      (1..period).each do |p|
+        temp_time =  (now_formatedtime + p)*@regress_return[0] + @regress_return[1]
+        @prediction << @highest_temp * (temp_time/max_temp)
+      end
+
       puts "Here is the linear prediction: #{@prediction}"
     elsif @flag.eql?("log")
       while i< x_data.length
         result[i] = @regress_return[0]*((Math.log(x_data[i]))-@regress_return[1])**2
         i += 1
-      end   
+      end
       max_temp = result.max
-      temp_time = @regress_return[0]*((Math.log(x_data[-1]+period))-@regress_return[1])**2 
-      @prediction = @highest_temp * (temp_time/max_temp)
+
+      (0..period-1).each do |p|
+        temp_time = @regress_return[0]*((Math.log(now_formatedtime + p))-@regress_return[1])**2
+        @prediction = @highest_temp * (temp_time/max_temp)
+      end
+
       puts "Here is the log prediction: #{@prediction}"
     elsif @flag.eql?("exp")
       while i< x_data.length
@@ -177,8 +196,10 @@ class Regression
         i += 1
       end
       max_temp = result.max
-      temp_time = Math.exp((x_data[-1] + period) * @regress_return[0]) + @regress_return[1]
-      @prediction = @highest_temp * (temp_time/max_temp)
+      (1..period).each do |p|
+        temp_time = Math.exp((now_formatedtime + p) * @regress_return[0]) + @regress_return[1]
+        @prediction = @highest_temp * (temp_time/max_temp)
+      end
       puts "Here is the exp prediction: #{@prediction}"
     end
   end
@@ -188,11 +209,14 @@ end
 regress_test = Regression.new
 x_data = []
 y_data = []
-time = 15
-CSV.foreach("input_3.txt", headers:true).each do |line|
+
+time_period_day = 1
+period = 60
+
+CSV.foreach("input_1.txt", headers:true).each do |line|
   y_data << line['datapoint'].to_f
   x_data << line['time'].to_f
 end
 
-regress_test.prediction_highTemp x_data, y_data, time
-regress_test.prediction_model x_data, y_data, time
+regress_test.prediction_highTemp x_data, y_data, time_period_day
+regress_test.prediction_model x_data, y_data, period
