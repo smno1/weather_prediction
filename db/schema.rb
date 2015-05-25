@@ -11,12 +11,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150516005454) do
+ActiveRecord::Schema.define(version: 20150525103349) do
 
   create_table "locations", id: false, force: :cascade do |t|
     t.string   "id"
     t.float    "lat"
     t.float    "lng"
+    t.float    "distance"
     t.integer  "post_code"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -32,6 +33,15 @@ ActiveRecord::Schema.define(version: 20150516005454) do
   end
 
   add_index "rain_fall_records", ["weather_data_recording_id"], name: "index_rain_fall_records_on_weather_data_recording_id"
+
+  create_table "stations", force: :cascade do |t|
+    t.string   "name"
+    t.float    "lat"
+    t.float    "lng"
+    t.float    "distance"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "temperature_records", force: :cascade do |t|
     t.float    "cel_degree"

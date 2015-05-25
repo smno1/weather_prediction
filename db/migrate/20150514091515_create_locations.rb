@@ -4,6 +4,7 @@ class CreateLocations < ActiveRecord::Migration
       t.string :id, index: true, primary_key: true
       t.float :lat
       t.float :lng
+      t.float :distance
       t.integer :post_code
 
       t.timestamps null: false
