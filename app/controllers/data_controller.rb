@@ -17,6 +17,12 @@ class DataController < ApplicationController
     @distances=@nearest_station.distance_from([l.lat,l.lng],:units=>:miles)
     
     @date=params[:date]
+    t_array=@date.split(/-/).map{|d| d.to_i}
+    query_time=DateTime.new(*t_array)
+    @wrecs=WeatherDataRecording.where(:recording_time=>query_time.at_beginning_of_day..query_time.at_end_of_day,:station_id=>@nearest_station.id)
+    
+    
+    
     respond_to do |format|
       format.html
       format.json { render json: weather_data_recording.to_json_by_location_and_date(@location_id,@date) }
