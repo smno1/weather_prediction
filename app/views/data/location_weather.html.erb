@@ -1,2 +1,17 @@
 <%= @location_id%>
 <%= @date%>
+
+<br/>
+Nearest Station: <%=@nearest_station.name%> 
+<br/>
+Distance: <%=@distances%>
+<br/>
+
+<% @wrecs.each do |r|%>
+<%=r.rain_fall_record%>
+<br/>
+<%=r.temperture_record%>
+<br/>
+<%=r.wind_records%>
+<br/>
+<%end%>

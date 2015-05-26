@@ -1,5 +1,8 @@
 source 'https://rubygems.org'
 
+
+#URL scraping gem
+gem 'nokogiri'
 #table layout gem
 gem 'jquery-datatables-rails', '~> 3.2.0'
 #location gem
