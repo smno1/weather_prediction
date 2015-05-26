@@ -1,3 +1,123 @@
+require 'csv'
+require 'matrix'
+require 'statsample'
+# require_relative 'max_data'
+
+
+require 'nokogiri'
+require 'open-uri'
+
+  def self.to_number dir
+        case dir
+            when "N"
+              dir = 0
+            when "NNE"
+              dir = 20
+            when "NE"
+              dir = 45
+            when "ENE"
+              dir = 60
+            when "E" 
+              dir = 90
+            when "ESE" 
+              dir = 120 
+            when "SE"
+              dir = 135
+            when "SSE"
+              dir = 140 
+            when "S" 
+              dir = 180
+            when "SSW"
+              dir = 200
+            when "SW"
+              dir = 225
+            when "WSW"
+              dir = 250
+            when "W" 
+              dir = 270
+            when "WNW"
+              dir = 300
+            when "NW"
+              dir = 315
+            when "NNW"
+              dir = 340
+            else 
+              dir = 0
+        end
+  end 
+
+
+
+  def get_data 
+    @max_temp_data = Hash.new
+    @max_rain = Hash.new
+    @max_wind_dir = Hash.new
+    @max_wind_speed = Hash.new
+
+        doc = Nokogiri::HTML(open("http://www.bom.gov.au/vic/observations/vicall.shtml"))
+        doc.css("#content").each do |x|
+          station = x.css("tr")
+          station.each do |y|
+            temp = y.css("a").text
+            sta = temp if !temp.empty?
+            b = y.css("a").map { |x| x['href']}
+            if !b.empty?
+            new_url = "http://www.bom.gov.au#{b.join()}"
+            read = Nokogiri::HTML(open(new_url))
+            recent = read.css("#content").each do |a|
+              div = a.css("div").css("a")
+              div_temp = div.to_s.match(/\/climate\/.+latest.shtml/).to_s
+                  if !div_temp.empty?
+                    recent_url = "http://www.bom.gov.au#{div_temp}"
+                    get = Nokogiri::HTML(open(recent_url))
+
+                    get.css(".data").each do |x|
+                      data_array = []
+                      data_array_rain = []
+                      data_array_dir = []
+                      data_array_speed = []
+
+                      (3..26).each do |i|
+                        data_array << x.css("tr")[i].css("td")[2].text.to_f
+                        data_array_rain << x.css("tr")[i].css("td")[3].text.to_f
+                        dir = x.css("tr")[i].css("td")[6].text
+                        data_array_dir  << to_number(dir)
+                        data_array_speed << x.css("tr")[i].css("td")[7].text.to_f
+                      end
+                      @max_temp_data[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array
+                      @max_rain[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_rain
+                      @max_wind_dir[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_dir
+                      @max_wind_speed[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_speed
+
+                    end
+                  end
+            end
+            end
+          end
+        end
+  end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class Regression
   def initialize
     @se_linear = +1.0/0.0
@@ -26,7 +146,7 @@ class Regression
     y_vector = y_data.to_vector(:scale)
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     linear = Statsample::Regression.multiple(ds,'y')
-    @probability_linear = linear.r2_adjusted()
+    @probability_linear = linear.r2_adjusted().round(2)
     temp[0] = linear.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = linear.constant.round(2)
     @regress_return = temp
@@ -58,7 +178,8 @@ class Regression
       i += 1
     end
     (0..x_array.length - 1).each{|x|var += ((y_array[x] - result[x]) ** 2)}
-    var = Math.sqrt(var/(x_array.length - degree - 1 ))
+    puts var
+    var = Math.sqrt(var/(x_array.length))
   end
 
   def polynomial x_array, y_array
@@ -86,7 +207,7 @@ class Regression
       sst += (y_array[i] - y_Average)**2
     end
    
-    @probability_poly = ssr/sst
+    @probability_poly = (ssr/sst).round(2)
     @se_poly = variation x_array, y_array, index    
   end
   
@@ -100,7 +221,7 @@ class Regression
     y_vector = log_y1_data.to_vector(:scale)
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     expon = Statsample::Regression.multiple(ds,'y')
-    @probability_exp = expon.r2_adjusted()
+    @probability_exp = expon.r2_adjusted().round(2)
     temp[0] = expon.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = (Math.exp(expon.constant)).round(2)
     @regress_return = temp
@@ -115,7 +236,7 @@ class Regression
     y_vector = y_data.to_vector(:scale)
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     log = Statsample::Regression.multiple(ds,'y')
-    @probability_log = log.r2_adjusted()
+    @probability_log = log.r2_adjusted().round(2)
     temp[0] = log.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = log.constant.round(2)
     @regress_return = temp
@@ -258,8 +379,6 @@ end
 regress_test = Regression.new
 
 
-time_period_day = 1
-period = 60
 
 x_data_hi = []
 y_data_hi = []
@@ -274,6 +393,11 @@ y_data_hi = []
   # i = i+1
   # j = j+1
 # end
+
+
+time_period_day = 1
+period = 60
+
 
 x_data = []
 y_data = []
