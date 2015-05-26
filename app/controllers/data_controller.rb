@@ -9,20 +9,22 @@ class DataController < ApplicationController
   end
 
   def location_weather
+    @attributes=["record_time","rainfall","temperature","wind_dir","win_speed"]
     @location_id=params[:location_id]
-    l=Location.find(@location_id)
-    @nearest_station=Station.closest(:origin => [l.lat,l.lng]).first
-    @distances=@nearest_station.distance_from([l.lat,l.lng],:units=>:miles)
-    @date=params[:date]
-    t_array=@date.split(/-/).map{|d| d.to_i}
+    @l=Location.find_by_id(@location_id)
+    unless @l.nil?
+      @nearest_station=Station.closest(:origin => [@l.lat,@l.lng]).first
+      @distances=@nearest_station.distance_from([@l.lat,@l.lng],:units=>:miles)
+      @date=params[:date]
+      t_array=@date.split(/-/).map{|d| d.to_i}
 
-    begin
-      query_time=DateTime.new(*t_array.reverse!)
-    rescue ArgumentError
-      query_time=nil
+      begin
+        query_time=DateTime.new(*t_array.reverse!)
+      rescue ArgumentError
+        query_time=nil
+      end
+      @wrecs=WeatherDataRecording.where(:recording_time=>query_time.at_beginning_of_day..query_time.at_end_of_day,:station_id=>@nearest_station.id)
     end
-    @wrecs=WeatherDataRecording.where(:recording_time=>query_time.at_beginning_of_day..query_time.at_end_of_day,:station_id=>@nearest_station.id)
-
     respond_to do |format|
       format.html
       format.json { render json: weather_data_recording.to_json_by_location_and_date(@location_id,@date) }
