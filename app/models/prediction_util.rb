@@ -65,10 +65,10 @@ class PredictionUtil
                   data_array_dir  << BaseFunctionUtil.win_dir_to_number(dir)
                   data_array_speed << x.css("tr")[i].css("td")[7].text.to_f
                 end
-                @max_temp_data[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array
-                @max_rain[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_rain
-                @max_wind_dir[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_dir
-                @max_wind_speed[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_speed
+                @max_temp_data[read.css("h1").text[/for\ ([A-Za-z ]+)/,1]] = data_array
+                @max_rain[read.css("h1").text[/for\ ([A-Za-z ]+)/,1]] = data_array_rain
+                @max_wind_dir[read.css("h1").text[/for\ ([A-Za-z ]+)/,1]] = data_array_dir
+                @max_wind_speed[read.css("h1").text[/for\ ([A-Za-z ]+)/,1]] = data_array_speed
               end
             end
           end
