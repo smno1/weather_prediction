@@ -8,10 +8,18 @@ Distance: <%=@distances%>
 <br/>
 
 <% @wrecs.each do |r|%>
-<%=r.rain_fall_record%>
+Recording time:
+<%=r.recording_time%>
 <br/>
-<%=r.temperture_record%>
+RainFall:
+<%=r.rain_fall_record.precip_amount%>
 <br/>
-<%=r.wind_records%>
+Temperature:
+<%=r.temperature_record.cel_degree%>
 <br/>
+Win Direction:
+<%=r.wind_record.win_dir%>
+<br/>
+Win Speed:
+<%=r.wind_record.win_speed%>
 <%end%>

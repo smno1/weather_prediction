@@ -1,7 +1,7 @@
 class WeatherDataRecording < ActiveRecord::Base
    belongs_to :station
   has_one :rain_fall_record
-  has_one :temperture_record
+  has_one :temperature_record
   has_one :wind_record
   
 
