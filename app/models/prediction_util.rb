@@ -1,124 +1,14 @@
 require 'csv'
 require 'matrix'
 require 'statsample'
-# require_relative 'max_data'
+require_relative 'base_function_util'
 
+# require_relative 'max_data'
 
 require 'nokogiri'
 require 'open-uri'
 
-  def self.to_number dir
-        case dir
-            when "N"
-              dir = 0
-            when "NNE"
-              dir = 20
-            when "NE"
-              dir = 45
-            when "ENE"
-              dir = 60
-            when "E" 
-              dir = 90
-            when "ESE" 
-              dir = 120 
-            when "SE"
-              dir = 135
-            when "SSE"
-              dir = 140 
-            when "S" 
-              dir = 180
-            when "SSW"
-              dir = 200
-            when "SW"
-              dir = 225
-            when "WSW"
-              dir = 250
-            when "W" 
-              dir = 270
-            when "WNW"
-              dir = 300
-            when "NW"
-              dir = 315
-            when "NNW"
-              dir = 340
-            else 
-              dir = 0
-        end
-  end 
-
-
-
-  def get_data 
-    @max_temp_data = Hash.new
-    @max_rain = Hash.new
-    @max_wind_dir = Hash.new
-    @max_wind_speed = Hash.new
-
-        doc = Nokogiri::HTML(open("http://www.bom.gov.au/vic/observations/vicall.shtml"))
-        doc.css("#content").each do |x|
-          station = x.css("tr")
-          station.each do |y|
-            temp = y.css("a").text
-            sta = temp if !temp.empty?
-            b = y.css("a").map { |x| x['href']}
-            if !b.empty?
-            new_url = "http://www.bom.gov.au#{b.join()}"
-            read = Nokogiri::HTML(open(new_url))
-            recent = read.css("#content").each do |a|
-              div = a.css("div").css("a")
-              div_temp = div.to_s.match(/\/climate\/.+latest.shtml/).to_s
-                  if !div_temp.empty?
-                    recent_url = "http://www.bom.gov.au#{div_temp}"
-                    get = Nokogiri::HTML(open(recent_url))
-
-                    get.css(".data").each do |x|
-                      data_array = []
-                      data_array_rain = []
-                      data_array_dir = []
-                      data_array_speed = []
-
-                      (3..26).each do |i|
-                        data_array << x.css("tr")[i].css("td")[2].text.to_f
-                        data_array_rain << x.css("tr")[i].css("td")[3].text.to_f
-                        dir = x.css("tr")[i].css("td")[6].text
-                        data_array_dir  << to_number(dir)
-                        data_array_speed << x.css("tr")[i].css("td")[7].text.to_f
-                      end
-                      @max_temp_data[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array
-                      @max_rain[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_rain
-                      @max_wind_dir[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_dir
-                      @max_wind_speed[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_speed
-
-                    end
-                  end
-            end
-            end
-          end
-        end
-  end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class Regression
+class PredictionUtil
   def initialize
     @se_linear = +1.0/0.0
     @se_poly = +1.0/0.0
@@ -127,16 +17,64 @@ class Regression
     @regress_return = []
     @flag = ""
     @highest_temp = ""
-    
+
     @prediction = []
     @probability = []
-    
+
     @probability_linear
     @probability_poly
     @probability_exp
     @probability_log
-    
     @result_prediction = []
+  end
+
+  def get_highes_temperature
+    @max_temp_data = Hash.new
+    @max_rain = Hash.new
+    @max_wind_dir = Hash.new
+    @max_wind_speed = Hash.new
+
+    doc = Nokogiri::HTML(open("http://www.bom.gov.au/vic/observations/vicall.shtml"))
+    doc.css("#content").each do |x|
+      station = x.css("tr")
+      station.each do |y|
+        temp = y.css("a").text
+        sta = temp if !temp.empty?
+        b = y.css("a").map { |x| x['href']}
+        if !b.empty?
+          new_url = "http://www.bom.gov.au#{b.join()}"
+          read = Nokogiri::HTML(open(new_url))
+          recent = read.css("#content").each do |a|
+            div = a.css("div").css("a")
+            div_temp = div.to_s.match(/\/climate\/.+latest.shtml/).to_s
+            if !div_temp.empty?
+              recent_url = "http://www.bom.gov.au#{div_temp}"
+              get = Nokogiri::HTML(open(recent_url))
+
+              get.css(".data").each do |x|
+                data_array = []
+                data_array_rain = []
+                data_array_dir = []
+                data_array_speed = []
+
+                (3..26).each do |i|
+                  data_array << x.css("tr")[i].css("td")[2].text.to_f
+                  data_array_rain << x.css("tr")[i].css("td")[3].text.to_f
+                  dir = x.css("tr")[i].css("td")[6].text
+
+                  data_array_dir  << BaseFunctionUtil.win_dir_to_number(dir)
+                  data_array_speed << x.css("tr")[i].css("td")[7].text.to_f
+                end
+                @max_temp_data[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array
+                @max_rain[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_rain
+                @max_wind_dir[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_dir
+                @max_wind_speed[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_speed
+              end
+            end
+          end
+        end
+      end
+    end
   end
 
   #------------------------------linear--------------------------------------------
@@ -201,17 +139,15 @@ class Regression
       y_estimate[i] = (sum/x_array[i])
       i += 1
     end
-    
+
     for i in(0..y_array.length-1)
       ssr += (y_estimate[i] - y_Average)**2
       sst += (y_array[i] - y_Average)**2
     end
-   
+
     @probability_poly = (ssr/sst).round(2)
-    @se_poly = variation x_array, y_array, index    
+    @se_poly = variation x_array, y_array, index
   end
-  
-  
 
   #————————————————————————————Exponential regression——————————————————————————————
   def exponential x_data, y_data
@@ -226,6 +162,7 @@ class Regression
     temp[1] = (Math.exp(expon.constant)).round(2)
     @regress_return = temp
     @se_exp = Math.sqrt(expon.mse.abs)
+    @se_exp = +1.0/0.0
   end
 
   #————————————————————————————Logarithmic regression——————————————————————————————
@@ -274,16 +211,16 @@ class Regression
         sum = (sum + x)*(x_data[-1] + offset_time)
       end
       @highest_temp = sum/(x_data[-1] + offset_time)
-      return @probability_poly
+    return @probability_poly
     elsif @flag.eql?("linear")
       @highest_temp = @regress_return[0]*(x_data[-1] + offset_time) + @regress_return[1]
-      return  @probability_linear
+    return  @probability_linear
     elsif @flag.eql?("log")
       @highest_temp = @regress_return[0]*((Math.log(x_data[-1] + offset_time))-@regress_return[1])**2
-      return @probability_log
+    return @probability_log
     elsif @flag.eql?("exp")
       @highest_temp = Math.exp((x_data[-1] + offset_time) * @regress_return[0]) + @regress_return[1]
-      return @probability_exp
+    return @probability_exp
     end
   end
 
@@ -332,7 +269,7 @@ class Regression
         @prediction << highestTemperature * (temp_time/max_temp)
         @probability << probability*@probability_linear
       end
- 
+
       result_prediction << @prediction
       result_prediction << @probability
       puts "Here is the linear prediction: #{result_prediction}"
@@ -367,48 +304,22 @@ class Regression
       puts "Here is the exp prediction: #{@prediction}"
     end
   end
-  
-  
-  def prediction x_data_hi, y_data_hi, x_data, y_data, time_period_day, period
-    probability = prediction_highTemp(x_data_hi, y_data_hi, time_period_day)
-    result_prediction = prediction_model(x_data, y_data, period, @highest_temp, probability)      
+
+  def prediction location, x_data, y_data, period
+    get_highes_temperature
+    x_data_hi = []
+    y_data_hi = []
+    y_data_hi = @max_temp_data[location]
+    i = 1
+    j = 0
+    while i < y_data_hi.length+1
+      x_data_hi[j] = i
+      i = i+1
+      j = j+1
+    end
+    probability = prediction_highTemp(x_data_hi, y_data_hi, 1)
+    result_prediction = prediction_model(x_data, y_data, period, @highest_temp, probability)
   end
 end
 
-#---------------------------end of class----------------------------------------------------
-regress_test = Regression.new
 
-
-
-x_data_hi = []
-y_data_hi = []
-
-# get_data
-# #get data from bom
-# y_data_hi = @max_temp_data["Charlton"]
-# i = 1
-# j = 0
-# while i < y_data_hi.length+1
-  # x_data_hi[j] = i
-  # i = i+1
-  # j = j+1
-# end
-
-
-time_period_day = 1
-period = 60
-
-
-x_data = []
-y_data = []
-CSV.foreach("input_1.txt", headers:true).each do |line|
-  y_data << line['datapoint'].to_f
-  x_data << line['time'].to_f
-end
-
-  x_data_hi = x_data
-  y_data_hi = y_data
-
-regress_test.prediction(x_data_hi, y_data_hi, x_data, y_data, time_period_day, period)
-# regress_test.prediction_highTemp x_data, y_data, time_period_day
-# regress_test.prediction_model x_data, y_data, period
