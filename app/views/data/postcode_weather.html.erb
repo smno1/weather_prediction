@@ -1,4 +1,6 @@
-PostCode: <%= @post_code%>	<br/>
+<% provide(:page_header,"PostCode: <%= @post_code%>)%>
+
+	<br/>
 
 <% @wrecs.each do |station,recs|%>
 	<%= station.name%>
