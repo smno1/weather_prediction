@@ -54,7 +54,7 @@ class PredictionController < ApplicationController
 
     predict_temp = preditUtil.prediction(@station.name, x_formated_time, temp_y_data, @period_toi)
     predict_rain = preditUtil.prediction(@station.name, x_formated_time, rain_y_data, @period_toi)
-    predict_win_dir = preditUtil.prediction(@station.name, x_formated_time, predict_win_dir, @period_toi)
-    predict_wind_speed = preditUtil.prediction(@station.name, x_formated_time, predict_wind_speed, @period_toi)
+    predict_win_dir = preditUtil.prediction(@station.name, x_formated_time, wind_dir_y_data, @period_toi)
+    predict_wind_speed = preditUtil.prediction(@station.name, x_formated_time, wind_speed_y_data, @period_toi)
   end
 end
