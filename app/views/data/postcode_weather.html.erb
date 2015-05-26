@@ -1,4 +1,4 @@
-<% provide(:page_header,"PostCode: <%= @post_code%>)%>
+<% provide(:page_header,"PostCode: "+@post_code)%>
 
 	<br/>
 
@@ -16,7 +16,7 @@
 		<%= r.temperature_record.cel_degree%>
 		<br/>
 		Wind Direction:
-		<%= r.wind_record.win_dir%>
+		<%=BaseFunctionUtil.number_to_win_dir  r.wind_record.win_dir%>
 		<br/>
 		Wind Speed km/h:
 		<%= r.wind_record.win_speed%>
