@@ -42,4 +42,43 @@ module BaseFunctionUtil
               dir = 0
         end
   end 
+  
+  def number_to_win_dir number
+      case number
+           when 0
+             number = "N"
+           when 0.01..44.99
+             number = "NNE"
+           when 45
+             number = "NE"
+           when 45.01..89.99
+             number  = "ENE"
+           when 90
+             number  = "E"
+           when 90.01..134.99
+             number  = "ESE"
+           when 135
+             number = "SE"
+           when 135.01..179.99
+             number = "SSE"
+           when 180
+             number  = "S"
+           when 180.01..224.99
+             number  = "SSW"
+           when 225
+             number  = "SW"
+           when 225.01..269.99
+             number = "WSW"
+           when 270
+             number  = "W"
+           when 270.01..314.99
+             number  = "WNW"
+           when 315
+             number = "NW"
+           when 315.01..359.99
+             number  = "NNW"
+           else 
+             number  =  "-" 
+           end
+      end
 end
