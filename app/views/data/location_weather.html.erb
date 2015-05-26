@@ -1,25 +1,38 @@
-<%= @location_id%>
-<%= @date%>
+<% provide(:page_header,@location_id+" weather on "+@date)%>
+<%unless @l.nil?%>
+<div class='col-lg-12'>
+	<div class='panel panel-default'>
+		<div class='panel-heading'>
+			Nearest Meteorology Station: <%= @nearest_station.name%>
+			<br/>
+			Distance: <%= @distances.round(2)%> miles from station to the location
+		</div>
+		<div class='panel-body'>
+			<table class='display datatable'>
+				<thead>
+					<tr>
+						<%@attributes.each do |c|%>
+						<th class='col-min-width text-center'><%= c.titleize%></th>
+						<%end%>
+					</tr>
+				</thead>
 
-<br/>
-Nearest Station: <%=@nearest_station.name%> 
-<br/>
-Distance: <%=@distances%>
-<br/>
-
-<% @wrecs.each do |r|%>
-Recording time:
-<%=r.recording_time%>
-<br/>
-RainFall:
-<%=r.rain_fall_record.precip_amount%>
-<br/>
-Temperature:
-<%=r.temperature_record.cel_degree%>
-<br/>
-Win Direction:
-<%=r.wind_record.win_dir%>
-<br/>
-Win Speed:
-<%=r.wind_record.win_speed%>
+				<tbody>
+					<% @wrecs.each do |r|%>
+					<tr>
+						<td class='col-min-width text-center'> <%= r.recording_time.strftime("%F %R")%> </td>
+						<td class='col-min-width text-center'> <%= r.rain_fall_record.precip_amount%> </td>
+						<td class='col-min-width text-center'> <%= r.temperature_record.cel_degree%> </td>
+						<td class='col-min-width text-center'> <%= r.wind_record.win_dir%> </td>
+						<td class='col-min-width text-center'> <%= r.wind_record.win_speed%> </td>
+					</tr>
+					<%end%>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<%else%>
+Don't have that location
 <%end%>
+
