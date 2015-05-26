@@ -19,7 +19,7 @@ class Station < ActiveRecord::Base
           weather_data.each do |data|
             time=BaseFunctionUtil.location_time_to_datetime data.fetch("local_date_time_full")
             #weather??
-            wrec=WeatherDataRecording.find_or_create_by(:station_id=>sta_id,:recording_time=>time,:condition=>data.fetch("weather"))
+            wrec=WeatherDataRecording.find_or_create_by(:station_id=>sta_id,:recording_time=>time)
             TemperatureRecord.create(:cel_degree => data.fetch("air_temp"),:weather_data_recording_id=>wrec.id)
             RainFallRecord.create(:precip_amount=>data.fetch("rain_trace"),:weather_data_recording_id=>wrec.id)
             WindRecord.create(:win_dir =>data.fetch("wind_dir"), :win_speed=>data.fetch("wind_dir"),:weather_data_recording_id=>wrec.id)
