@@ -15,33 +15,33 @@ class WeatherDataRecording < ActiveRecord::Base
   end
   
   def self.to_json_by_postcode_and_period postcode,period
-      return_hash=Hash.new
-      location_id=Locations.find_by(post_code=>postcode).id
-      time = Time.now
-      #search_past24 location_id
-      if(period.eql?("10"||"30"||"60"||"120"||"180")
-        period.step(0,180) do |t|
-        return_hash[t]={:time=>(time+(600*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>,:probability=>},:temp=>{:value=>,:probability=>},:wind_speed=>{:value=>,:probability=>},:wind_direction=>{:value=>,:probability=>}}
-        end
-        {:location_id=>location_id,:predictions=>return_hash}
-      else
-        puts "You can only choose the period from 10,30,60,120,180."
+      # return_hash=Hash.new
+      # location_id=Locations.find_by(post_code=>postcode).id
+      # time = Time.now
+      # #search_past24 location_id
+      # if(period.eql?("10"||"30"||"60"||"120"||"180")
+        # period.step(0,180) do |t|
+        # return_hash[t]={:time=>(time+(600*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>,:probability=>},:temp=>{:value=>,:probability=>},:wind_speed=>{:value=>,:probability=>},:wind_direction=>{:value=>,:probability=>}}
+        # end
+        # {:location_id=>location_id,:predictions=>return_hash}
+      # else
+        # puts "You can only choose the period from 10,30,60,120,180."
   end
   
   
   def self.to_json_by_lat_long_and_period lat,long,period
-      return_hash=Hash.new
-      location_id=Locations.find_by(lat=>lat AND lng=>long).id
-      time = Time.now
-      #search_past24 location_id
-      if(period.eql?("10"||"30"||"60"||"120"||"180")
-        period.step(0,180) do |t|
-        return_hash[t]={:time=>(time+(600*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>,:probability=>},:temp=>{:value=>,:probability=>},:wind_speed=>{:value=>,:probability=>},:wind_direction=>{:value=>,:probability=>}}
-        end
-      {:lattitude=>lat,:longitude=>long,:predictions=>return_hash}
-      else
-        puts "You can only choose the period from 10,30,60,120,180."
-  
+      # return_hash=Hash.new
+      # location_id=Locations.find_by(lat=>lat AND lng=>long).id
+      # time = Time.now
+      # #search_past24 location_id
+      # if(period.eql?("10"||"30"||"60"||"120"||"180")
+        # period.step(0,180) do |t|
+        # return_hash[t]={:time=>(time+(600*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>,:probability=>},:temp=>{:value=>,:probability=>},:wind_speed=>{:value=>,:probability=>},:wind_direction=>{:value=>,:probability=>}}
+        # end
+      # {:lattitude=>lat,:longitude=>long,:predictions=>return_hash}
+      # else
+        # puts "You can only choose the period from 10,30,60,120,180."
+#   
   end
   
   
