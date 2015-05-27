@@ -7,7 +7,10 @@ class PredictionUtil
     @se_poly = +1.0/0.0
     @se_exp = +1.0/0.0
     @se_log = +1.0/0.0
-    @regress_return = []
+    @regress_return_linear = []
+    @regress_return_poly = []
+    @regress_return_log = []
+    @regress_return_exp = []
     @flag = ""
     @highest_temp = ""
     @result_prediction = []
@@ -72,7 +75,7 @@ class PredictionUtil
     @probability_linear = linear.r2_adjusted().round(2)
     temp[0] = linear.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = linear.constant.round(2)
-    @regress_return = temp
+    @regress_return_linear = temp
     @se_linear = Math.sqrt(linear.mse.abs)
   end
 
@@ -103,21 +106,29 @@ class PredictionUtil
     (0..x_array.length - 1).each{|x|var += ((y_array[x] - result[x]) ** 2)}
     var = Math.sqrt(var/(x_array.length))
   end
-
+  
   def polynomial x_array, y_array
     y_Average=y_array.inject{|r,a|r+a}.to_f/y_array.size
     array = []
     y_estimate = []
-    (2..10).each{|x| array << (variation x_array, y_array, x)}
+    (2..10).each{|x| 
+    # puts "==============================test #{x}===================="
+      # puts x_array.inspect
+      # puts y_array.inspect
+      # puts (variation x_array, y_array, x)
+    # puts "==============================test===================="
+      array << (variation x_array, y_array, x)}
+    # puts array.inspect
+    # puts array.min
     index = (array.index(array.min) + 2)
     array1 = regress x_array, y_array, index
-    @regress_return = array1.reverse
+    @regress_return_poly = array1.reverse
     ssr = 0
     sst = 0
     i = 0
     while i < x_array.length
       sum = 0
-      @regress_return.each do |x|
+      @regress_return_poly.each do |x|
         sum = (sum + x)*x_array[i]
       end
       y_estimate[i] = (sum/x_array[i])
@@ -144,7 +155,7 @@ class PredictionUtil
     @probability_exp = expon.r2_adjusted().round(2)
     temp[0] = expon.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = (Math.exp(expon.constant)).round(2)
-    @regress_return = temp
+    @regress_return_exp = temp
     @se_exp = Math.sqrt(expon.mse.abs)
     @se_exp = +1.0/0.0
   end
@@ -160,19 +171,51 @@ class PredictionUtil
     @probability_log = log.r2_adjusted().round(2)
     temp[0] = log.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = log.constant.round(2)
-    @regress_return = temp
+    @regress_return_log = temp
     @se_log = Math.sqrt(log.mse.abs)
   end
 
   #-----------------------------best_fit-------------------------------------------------
   def best_fit x_data, y_data
     mini_var = []
-    mini_var << linear(x_data, y_data)
-    mini_var << polynomial(x_data, y_data)
+    linear(x_data, y_data)
+    if @se_linear.nan?
+      mini_var << +1.0/0.0
+    else
+      mini_var << @se_linear 
+    end
+  
+    
+    polynomial(x_data, y_data)
+    if @se_poly.nan?
+      mini_var << +1.0/0.0
+    else
+      mini_var << @se_poly
+    end
+    
+    
     exponential(x_data, y_data) if y_data.all?{|y| y>0 }
     logarithmic(x_data, y_data) if x_data.all?{|x| x>0 }
-    mini_var << @se_exp
-    mini_var << @se_log
+
+    if @se_exp.nan?
+      mini_var << +1.0/0.0
+    else
+      mini_var << @se_exp
+    end
+
+    if @se_log.nan?
+      mini_var << +1.0/0.0
+    else
+      mini_var << @se_log
+    end
+    
+    # mini_var << @se_exp
+    # mini_var << @se_log
+    
+    
+    # puts "=========test best fit==========="
+    # puts mini_var.inspect
+    # puts "=========test best fit==========="
     index = mini_var.index(mini_var.min)
     case index
     when 0
@@ -191,19 +234,19 @@ class PredictionUtil
     best_fit x_data, y_data
     if @flag.eql?("poly")
       sum = 0
-      @regress_return.each do |x|
+      @regress_return_poly.each do |x|
         sum = (sum + x)*(x_data[-1] + offset_time)
       end
       @highest_temp = sum/(x_data[-1] + offset_time)
     return @probability_poly
     elsif @flag.eql?("linear")
-      @highest_temp = @regress_return[0]*(x_data[-1] + offset_time) + @regress_return[1]
+      @highest_temp = @regress_return_linear[0]*(x_data[-1] + offset_time) + @regress_return_linear[1]
     return  @probability_linear
     elsif @flag.eql?("log")
-      @highest_temp = @regress_return[0]*((Math.log(x_data[-1] + offset_time))-@regress_return[1])**2
+      @highest_temp = @regress_return_log[0]*((Math.log(x_data[-1] + offset_time))-@regress_return_log[1])**2
     return @probability_log
     elsif @flag.eql?("exp")
-      @highest_temp = Math.exp((x_data[-1] + offset_time) * @regress_return[0]) + @regress_return[1]
+      @highest_temp = Math.exp((x_data[-1] + offset_time) * @regress_return_exp[0]) + @regress_return_exp[1]
     return @probability_exp
     end
   end
@@ -219,21 +262,30 @@ class PredictionUtil
     probability_array = []
     result = []
     result_prediction = []
+    
     best_fit x_data, y_data
+    
     if @flag.eql?("poly")
       while i < x_data.length
         sum = 0
-        @regress_return.each do |x|
+     # puts "==========test=====max======"
+     # puts result
+     # puts "==========test=====max======"
+     max_temp = result.max
+        @regress_return_poly.each do |x|
           sum = (sum + x)*x_data[i]
         end
         result[i] = sum/x_data[i]
         i += 1
       end
+      # puts "==========test=====max======"
+      # puts result
+      # puts "==========test=====max======"
       max_temp = result.max
 
       (1..period).each do |p|
         sum = 0
-        @regress_return.each do |x|
+        @regress_return_poly.each do |x|
           sum = (sum + x)*(now_formatedtime + p/6)
         end
         temp_time = sum/(now_formatedtime + p/6)
@@ -246,13 +298,13 @@ class PredictionUtil
       # puts "Here is the poly prediction: #{result_prediction}"
     elsif @flag.eql?("linear")
       while i< x_data.length
-        result[i] = x_data[i]*@regress_return[0] + @regress_return[1]
+        result[i] = x_data[i]*@regress_return_linear[0] + @regress_return_linear[1]
         i += 1
       end
       max_temp = result.max
 
       (1..period).each do |p|
-        temp_time =  (now_formatedtime + p/6)*@regress_return[0] + @regress_return[1]
+        temp_time =  (now_formatedtime + p/6)*@regress_return_linear[0] + @regress_return_linear[1]
         prediction_array << highestTemperature * (temp_time/max_temp)
         probability_array << (probability*@probability_linear).abs
       end
@@ -263,13 +315,13 @@ class PredictionUtil
       # puts "Here is the linear prediction: #{result_prediction}"
     elsif @flag.eql?("log")
       while i< x_data.length
-        result[i] = @regress_return[0]*((Math.log(x_data[i]))-@regress_return[1])**2
+        result[i] = @regress_return_log[0]*((Math.log(x_data[i]))-@regress_return_log[1])**2
         i += 1
       end
       max_temp = result.max
 
       (0..period-1).each do |p|
-        temp_time = @regress_return[0]*((Math.log(now_formatedtime + p/6))-@regress_return[1])**2
+        temp_time = @regress_return_log[0]*((Math.log(now_formatedtime + p/6))-@regress_return_log[1])**2
         prediction_array = highestTemperature * (temp_time/max_temp)
         probability_array << (probability*@probability_log).abs
       end
@@ -279,12 +331,12 @@ class PredictionUtil
       # puts "Here is the log prediction: #{@prediction}"
     elsif @flag.eql?("exp")
       while i< x_data.length
-        result[i] = Math.exp(x_data[i]*@regress_return[0]) + @regress_return[1]
+        result[i] = Math.exp(x_data[i]*@regress_return_exp[0]) + @regress_return_exp[1]
         i += 1
       end
       max_temp = result.max
       (1..period).each do |p|
-        temp_time = Math.exp((now_formatedtime + p/6) * @regress_return[0]) + @regress_return[1]
+        temp_time = Math.exp((now_formatedtime + p/6) * @regress_return_exp[0]) + @regress_return_exp[1]
         prediction_array << (highestTemperature * (temp_time/max_temp)).abs
         probability_array << (probability*@probability_exp).abs
       end
@@ -296,6 +348,10 @@ class PredictionUtil
   end
 
   def prediction location, x_data, y_data_temp, y_data_rain, y_data_wind_dir, y_data_wind_speed , period
+    # puts "===============test input==========="
+    # puts x_data
+    # print y_data_temp
+    # puts "===============test input==========="
     get_highest_temperature
     x_data_hi = []
     y_data_hi_rain = []
@@ -319,15 +375,29 @@ class PredictionUtil
     @return_prediction = Hash.new
     probability_temp = prediction_highTemp(x_data_hi, y_data_hi_temp, 1)   
     @return_prediction['temperature'] = prediction_model(x_data, y_data_temp, period, @highest_temp, probability_temp)
+    puts "=============test result==========****************"
+    puts "@return_prediction['temperature']:"
+    puts @return_prediction['temperature']
+    puts "=============test result==========****************"
     
     probability_rain = prediction_highTemp(x_data_hi, y_data_hi_rain, 1)
     @return_prediction['rain'] = prediction_model(x_data, y_data_rain, period, @highest_temp, probability_rain)
+    puts "=============test result==========****************"
+    puts  "@return_prediction['rain']"
+    puts  @return_prediction['rain']
    
     probability_wind_dir = prediction_highTemp(x_data_hi, y_data_hi_wind_dir, 1)
     @return_prediction['wind_dir'] = prediction_model(x_data, y_data_wind_dir, period, @highest_temp, probability_wind_dir)
-    
+    puts "=============test result==========****************"
+    puts "@return_prediction['wind_dir']"
+    puts @return_prediction['wind_dir']
+   
     probability_wind_speed = prediction_highTemp(x_data_hi, y_data_hi_wind_speed, 1)
     @return_prediction['wind_speed'] = prediction_model(x_data, y_data_wind_speed, period, @highest_temp, probability_wind_speed)
+    puts "=============test result==========****************"
+    puts  "@return_prediction['wind_speed']"
+    puts  @return_prediction['wind_speed']
   end
+
 
 end
