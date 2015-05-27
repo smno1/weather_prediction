@@ -6,7 +6,13 @@ module BaseFunctionUtil
   def location_time_to_datetime location_time
     DateTime.new(location_time[0,4].to_i,location_time[4,2].to_i,location_time[6,2].to_i,location_time[8,2].to_i,location_time[10,2].to_i,location_time[12,2].to_i)
   end
-
+  
+  def get_min_from_a_mix_array ma
+    _ma=ma.select{|x| !x.try(:nan?)}
+    return -1 if _ma.blank?
+    ma.index(_ma.min)
+  end
+  
   def get_location_current_data lat_long, options = {:units=>'ca'}
     url="#{BASE_URL}/#{API_KEY}/#{lat_long}"
     unless options.blank?
