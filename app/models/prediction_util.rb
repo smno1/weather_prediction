@@ -293,7 +293,7 @@ class PredictionUtil
     probability_array = []
     result = []
     result_prediction = []
-    
+    deduct_probability = 10000
     best_fit x_data, y_data
     
     if @flag.eql?("poly")
@@ -320,8 +320,8 @@ class PredictionUtil
           sum = (sum + x)*(now_formatedtime + p/6.0)
         end
         temp_time = sum/(now_formatedtime + p/6.0)
-        prediction_array << (highestTemperature * (temp_time/max_temp)).round(3)
-        probability_array << ((probability*@probability_poly).abs).round(3)
+        prediction_array << ((highestTemperature * (temp_time/max_temp)).abs).round(3)
+        probability_array << (((probability*@probability_poly) - p/deduct_probability).abs).round(3)
       end
       result_prediction << prediction_array
       result_prediction << probability_array
@@ -336,8 +336,8 @@ class PredictionUtil
 
       (0..period-1).each do |p|
         temp_time =  (now_formatedtime + p/6.0)*@regress_return_linear[0] + @regress_return_linear[1]
-        prediction_array << (highestTemperature * (temp_time/max_temp)).round(3)
-        probability_array << ((probability*@probability_linear).abs).round(3)
+        prediction_array << ((highestTemperature * (temp_time/max_temp)).abs).round(3)
+        probability_array << (((probability*@probability_linear) - p/deduct_probability).abs).round(3)
       end
 
       result_prediction << prediction_array
@@ -357,8 +357,8 @@ class PredictionUtil
 
       (0..period-1).each do |p|
         temp_time = @regress_return_log[0]*(Math.log(now_formatedtime + p/6.0))+@regress_return_log[1]
-        prediction_array << (highestTemperature * (temp_time/max_temp)).round(3)
-        probability_array << ((probability*@probability_log).abs).round(3)
+        prediction_array << ((highestTemperature * (temp_time/max_temp)).abs).round(3)
+        probability_array << (((probability*@probability_log) - p/deduct_probability).abs).round(3)
       end
       result_prediction << prediction_array
       result_prediction << probability_array
@@ -372,8 +372,8 @@ class PredictionUtil
       max_temp = result.max
       (1..period).each do |p|
         temp_time = Math.exp((now_formatedtime + p/6.0) * @regress_return_exp[0]) + @regress_return_exp[1]
-        prediction_array << (highestTemperature * ((temp_time/max_temp)).abs).round(3)
-        probability_array << ((probability*@probability_exp).abs).round(3)
+        prediction_array << ((highestTemperature *(temp_time/max_temp)).abs).round(3)
+        probability_array << (((probability*@probability_exp) - p/deduct_probability).abs).round(3)
       end
       result_prediction << prediction_array
       result_prediction << probability_array
