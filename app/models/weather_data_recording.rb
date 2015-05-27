@@ -19,7 +19,7 @@ class WeatherDataRecording < ActiveRecord::Base
     end
   end
   
-  def self.to_json_by_postcode_and_period period,name,predict_temp,predict_rain,predict_win_dir,predict_wind_speed
+  def self.to_json_by_postcode_and_period period,post_code,predict_temp,predict_rain,predict_win_dir,predict_wind_speed
       return_hash=Hash.new
       time = Time.now
       i=0
@@ -27,7 +27,7 @@ class WeatherDataRecording < ActiveRecord::Base
         return_hash[t]={:time=>(time+(60*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>predict_rain[0][i],:probability=>predict_rain[1][i]},:temp=>{:value=>predict_temp[0][i],:probability=>predict_temp[1][i]},:wind_speed=>{:value=>predict_wind_speed[0][i],:probability=>predict_wind_speed[1][i]},:wind_direction=>{:value=>predict_win_dir[0][i],:probability=>predict_win_dir[1][i]}}
         i+=1
       end
-      {:location_id=>name,:predictions=>return_hash}   
+      {:postcode=>post_code,:predictions=>return_hash}   
   end
   
   

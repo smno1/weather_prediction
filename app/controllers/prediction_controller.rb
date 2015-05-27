@@ -1,5 +1,6 @@
 class PredictionController < ApplicationController
   def postcode_weather
+    @columns=["prediction","temperature","rain","wind_dir","wind_speed"]
     @post_code=params[:post_code]
     @period=params[:period]
     @period_toi = @period.to_i
@@ -8,18 +9,29 @@ class PredictionController < ApplicationController
     @locations = Location.where(:post_code=>@post_code)
 
     #return hash in the form of? {"station1" => {"temperature" => [[1,2,3], [1,2,3]], "rain" => [[1,2,3],[1,2,3]]}, "station2" => {"temperature" => [[1,2,3], [1,2,3]], "rain" => [[1,2,3],[1,2,3]]}...}
-    @stations_prediction_Hash = Hash.new
+    @stations_prediction_hash = Hash.new
+    @stations_distance_hash = Hash.new
+    @stations_hash = Hash.new
+    cloest_location=Location.new
+    cloest_distance=1/0.0
     @locations.each do |l|
       lat=l.lat
       lng=l.lng
       station=Station.closest(:origin => [lat,lng]).first
       distances=station.distance_from([lat,lng],:units=>:miles)
-      @stations_prediction_Hash[l.id] = get_prediction(distances, dt, station, @period_toi)
+      if(distances<cloest_distance)
+        cloest_location=l
+        cloest_distance=distances
+      end
+      @stations_prediction_hash[l.id] = get_prediction(distances, dt, station, @period_toi)
+      @stations_distance_hash[l.id] = distances
+      @stations_hash[l.id] = station
     end
-
     respond_to do |format|
       format.html
-      format.json { render json: weather_data_recording.to_json_by_postcode_and_period(@period_toi,@station.name,predict_temp,predict_rain,predict_win_dir,predict_wind_speed)}
+      format.json { render json: WeatherDataRecording.to_json_by_postcode_and_period(@period_toi,@post_code,
+        @stations_prediction_hash[cloest_location.id]["temperature"],@stations_prediction_hash[cloest_location.id]["rain"],
+        @stations_prediction_hash[cloest_location.id]["wind_dir"],@stations_prediction_hash[cloest_location.id]["wind_speed"])}
     end
   end
 
@@ -37,7 +49,6 @@ class PredictionController < ApplicationController
 
     @return_prediction = Hash.new
     @return_prediction = get_prediction(@distances, dt, @station, @period_toi)
-
 
     #get the prediction of temperature, rain and wind in the form of [[10,20,30], [0.9,0.8,0.7]]
     # @predict_rain = preditUtil.prediction(@station.name, x_formated_time, rain_y_data, @period_toi, "rain")
@@ -111,8 +122,12 @@ class PredictionController < ApplicationController
     # return a hash contains the prediction of temperature, rain, wind and their corresponding probability
     # in the form of {:temperature [[10,20,30], [0.9,0.8,0.7]], :rain [[10,20,30], [0.9,0.8,0.7]], :wind_dir [[10,20,30], [0.9,0.8,0.7]], :wind_speed [[10,20,30], [0.9,0.8,0.7]]}
     return_prediction = preditUtil.prediction(station.name, x_formated_time, temp_y_data, rain_y_data, wind_dir_y_data, wind_speed_y_data, period_toi)
+    puts "return_prediction=======1=========="
+    puts return_prediction.inspect
     return_prediction = return_prediction.merge(return_prediction){|k,v| v.collect{|x| x.collect{|y| ((y - distance/deduction_prob).abs).round(3)}}}
-
+    puts "return_prediction=======2=========="
+    puts return_prediction.inspect
+    return_prediction
   end
 
 end

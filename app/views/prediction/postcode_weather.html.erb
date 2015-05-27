@@ -1,2 +1,18 @@
-<%= @post_code%>
-<%= @period%>
+<% provide(:page_header,"Locations within PostCode: "+@post_code)%>
+
+	<br/>
+<% @locations.each do |l|%>
+<div class='col-lg-12'>
+	<div class='panel panel-default'>
+		<div class='panel-heading'>
+			Prediction <%= l.id%> the next <%= @period%> minutes<br/>
+			Distance to the cloest station <%=@stations_hash[l.id].name%> : <%=@stations_distance_hash[l.id]%> miles <br/>
+		</div>
+		<div class='panel-body'>
+			<%= render :partial=>'prediction_weather_table', :locals => {:columns => @columns, :return_prediction=>@stations_prediction_hash[l.id]}%>
+		</div>
+	</div>
+</div>
+
+
+<%end%>

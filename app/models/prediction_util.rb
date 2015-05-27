@@ -291,7 +291,7 @@ class PredictionUtil
     probability_array = []
     result = []
     result_prediction = []
-    deduct_probability = 10000
+    deduct_probability = 10000000000
     best_fit x_data, y_data
 
     if @flag.eql?("poly")

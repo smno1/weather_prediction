@@ -1,7 +1,4 @@
 <% provide(:page_header,"Coodination Prediction")%>
-<% predictions,probablity=(0..1).map do |i| %>
-<%@return_prediction["temperature"][i].zip @return_prediction["rain"][i],@return_prediction["wind_dir"][i],@return_prediction["wind_speed"][i]%>
-<% end%>
 <div class='col-lg-12'>
 	<div class='panel panel-default'>
 		<div class='panel-heading'>
@@ -9,7 +6,7 @@
 			Distance to the cloest station <%=@station.name%> : <%=@distances%> miles <br/>
 		</div>
 		<div class='panel-body'>
-			<%= render :partial=>'prediction_weather_table', :locals => {:columns => @columns, :predictions=>predictions,:probablity=>probablity}%>
+			<%= render :partial=>'prediction_weather_table', :locals => {:columns => @columns, :return_prediction=>@return_prediction}%>
 		</div>
 	</div>
 </div>

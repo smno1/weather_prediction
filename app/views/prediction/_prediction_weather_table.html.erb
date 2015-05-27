@@ -1,3 +1,6 @@
+<% predictions,probablity=(0..1).map do |i| %>
+<%return_prediction["temperature"][i].zip return_prediction["rain"][i],return_prediction["wind_dir"][i],return_prediction["wind_speed"][i]%>
+<% end%>
 <table class='display datatable'>
 	<thead>
 		<tr>
@@ -12,7 +15,7 @@
 		<tr>
 		  <td class='col-min-width text-center'>in <%= i*10 %> minutes</td>
 		  <%(0..p.count-1).each do |n|%>	
-			<td class='col-min-width text-center'><%= p[n] %>(<%=probablity[i][n]%>)</td>
+			<td class='col-min-width text-center'><%= p[n] %>(<%=(probablity[i][n]*(1-i/50.0)).round(3)%>)</td>
 		  <%end%>
 		</tr>
 		<%end%>
