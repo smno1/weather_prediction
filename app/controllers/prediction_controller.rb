@@ -14,7 +14,7 @@ class PredictionController < ApplicationController
       lng=l.lng
       station=Station.closest(:origin => [lat,lng]).first
       distances=station.distance_from([lat,lng],:units=>:miles)
-      @stations_prediction_Hash["station"] = get_prediction(distances, dt, station, @period_toi)
+      @stations_prediction_Hash[station] = get_prediction(distances, dt, station, @period_toi)
     end
 
     respond_to do |format|
