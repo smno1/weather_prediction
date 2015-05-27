@@ -37,9 +37,6 @@ class PredictionController < ApplicationController
     @return_prediction = Hash.new
     @return_prediction = get_prediction(@distances, dt, @station, @period_toi)
 
-    @return_prediction["temperature"][0].each do |x|
-
-  end
 
     #get the prediction of temperature, rain and wind in the form of [[10,20,30], [0.9,0.8,0.7]]
     # @predict_rain = preditUtil.prediction(@station.name, x_formated_time, rain_y_data, @period_toi, "rain")
