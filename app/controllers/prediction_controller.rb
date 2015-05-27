@@ -78,7 +78,7 @@ class PredictionController < ApplicationController
     
     # return a hash contains the prediction of temperature, rain, wind and their corresponding probability
     # in the form of {:temperature [[10,20,30], [0.9,0.8,0.7]], :rain [[10,20,30], [0.9,0.8,0.7]], :wind_dir [[10,20,30], [0.9,0.8,0.7]], :wind_speed [[10,20,30], [0.9,0.8,0.7]]}
-    @return_prediction = preditUtil.prediction("Charlton", x_formated_time, temp_y_data, rain_y_data, wind_dir_y_data, wind_speed_y_data, @period_toi)
+    @return_prediction = preditUtil.prediction(@station.name, x_formated_time, temp_y_data, rain_y_data, wind_dir_y_data, wind_speed_y_data, @period_toi)
     
     
     #get the prediction of temperature, rain and wind in the form of [[10,20,30], [0.9,0.8,0.7]]
@@ -87,7 +87,8 @@ class PredictionController < ApplicationController
     # @predict_wind_speed = preditUtil.prediction(@station.name, x_formated_time, wind_speed_y_data, @period_toi, "wind_speed")
   respond_to do |format|
       format.html
-      format.json { render json: weather_data_recording.to_json_by_lat_long_and_period(@period_toi,@lat,@long,predict_temp,predict_rain,predict_win_dir,predict_wind_speed)}
+      format.json { render json: WeatherDataRecording.to_json_by_lat_long_and_period(@period_toi,@lat,@long,
+        @return_prediction["temperature"],@return_prediction["rain"],@return_prediction["wind_dir"],@return_prediction["wind_speed"])}
     end
   end
 end

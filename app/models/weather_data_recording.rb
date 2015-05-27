@@ -23,7 +23,7 @@ class WeatherDataRecording < ActiveRecord::Base
       return_hash=Hash.new
       time = Time.now
       i=0
-      period.step(0,180) do |t|
+      0.step(period-10,10) do |t|
         return_hash[t]={:time=>(time+(60*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>predict_rain[0][i],:probability=>predict_rain[1][i]},:temp=>{:value=>predict_temp[0][i],:probability=>predict_temp[1][i]},:wind_speed=>{:value=>predict_wind_speed[0][i],:probability=>predict_wind_speed[1][i]},:wind_direction=>{:value=>predict_win_dir[0][i],:probability=>predict_win_dir[1][i]}}
         i+=1
       end
@@ -35,8 +35,10 @@ class WeatherDataRecording < ActiveRecord::Base
       return_hash=Hash.new
       time = Time.now
       i=0
-      period.step(0,180) do |t|
-        return_hash[t]={:time=>(time+(60*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>predict_rain[0][i],:probability=>predict_rain[1][i]},:temp=>{:value=>predict_temp[0][i],:probability=>predict_temp[1][i]},:wind_speed=>{:value=>predict_wind_speed[0][i],:probability=>predict_wind_speed[1][i]},:wind_direction=>{:value=>predict_win_dir[0][i],:probability=>predict_win_dir[1][i]}}
+      0.step(period-10,10) do |t|
+        return_hash[t]={:time=>(time+(60*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>predict_rain[0][i],:probability=>predict_rain[1][i]},
+        :temp=>{:value=>predict_temp[0][i],:probability=>predict_temp[1][i]},:wind_speed=>{:value=>predict_wind_speed[0][i],:probability=>predict_wind_speed[1][i]},
+        :wind_direction=>{:value=>(BaseFunctionUtil.number_to_win_dir predict_win_dir[0][i]),:probability=>predict_win_dir[1][i]}}
         i+=1
       end
       {:lattitude=>lat,:longitude=>long,:predictions=>return_hash}

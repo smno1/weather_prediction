@@ -53,10 +53,10 @@ class PredictionUtil
                   data_array_dir  << BaseFunctionUtil.win_dir_to_number(dir)
                   data_array_speed << x.css("tr")[i].css("td")[7].text.to_f
                 end
-                @max_temp_data[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array
-                @max_rain[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_rain
-                @max_wind_dir[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_dir
-                @max_wind_speed[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_speed
+                @max_temp_data[read.css("h1").text[/for\ ([A-Za-z \(\)]+)/,1]] = data_array
+                @max_rain[read.css("h1").text[/for\ ([A-Za-z \(\)]+)/,1]] = data_array_rain
+                @max_wind_dir[read.css("h1").text[/for\ ([A-Za-z \(\)]+)/,1]] = data_array_dir
+                @max_wind_speed[read.css("h1").text[/for\ ([A-Za-z \(\)]+)/,1]] = data_array_speed
               end
             end
           end
@@ -281,8 +281,8 @@ class PredictionUtil
   def prediction_model x_data, y_data, period, highestTemperature, probability
     now=Time.now
     hour = now.hour
-    min = now.min/60
-    now_formatedtime = 24*hour/24 + min
+    min = now.min/60.0
+    now_formatedtime = hour.to_f + min
     period = period/10
     i = 0
     prediction_array = []
@@ -300,9 +300,9 @@ class PredictionUtil
      # puts "==========test=====max======"
      max_temp = result.max
         @regress_return_poly.each do |x|
-          sum = (sum + x)*x_data[i]
+          sum = (sum + x)*(x_data[i].to_f)
         end
-        result[i] = sum/x_data[i]
+        result[i] = sum/(x_data[i].to_f)
         i += 1
       end
       # puts "==========test=====max======"
@@ -313,9 +313,9 @@ class PredictionUtil
       (1..period).each do |p|
         sum = 0
         @regress_return_poly.each do |x|
-          sum = (sum + x)*(now_formatedtime + p/6)
+          sum = (sum + x)*(now_formatedtime + p/6.0)
         end
-        temp_time = sum/(now_formatedtime + p/6)
+        temp_time = sum/(now_formatedtime + p/6.0)
         prediction_array << highestTemperature * (temp_time/max_temp)
         probability_array << (probability*@probability_poly).abs
       end
@@ -325,13 +325,13 @@ class PredictionUtil
       # puts "Here is the poly prediction: #{result_prediction}"
     elsif @flag.eql?("linear")
       while i< x_data.length
-        result[i] = x_data[i]*@regress_return_linear[0] + @regress_return_linear[1]
+        result[i] = x_data[i].to_f*@regress_return_linear[0] + @regress_return_linear[1]
         i += 1
       end
       max_temp = result.max
 
-      (1..period).each do |p|
-        temp_time =  (now_formatedtime + p/6)*@regress_return_linear[0] + @regress_return_linear[1]
+      (0..period-1).each do |p|
+        temp_time =  (now_formatedtime + p/6.0)*@regress_return_linear[0] + @regress_return_linear[1]
         prediction_array << highestTemperature * (temp_time/max_temp)
         probability_array << (probability*@probability_linear).abs
       end
@@ -342,14 +342,18 @@ class PredictionUtil
       # puts "Here is the linear prediction: #{result_prediction}"
     elsif @flag.eql?("log")
       while i< x_data.length
-        result[i] = @regress_return_log[0]*((Math.log(x_data[i]))-@regress_return_log[1])**2
+        result[i] = @regress_return_log[0]*(Math.log(x_data[i]==0? 24:x_data[i]))+@regress_return_log[1]
+      puts "result #{i}==========="
+      puts result[i],x_data[i]
         i += 1
       end
       max_temp = result.max
+      puts "max_temp"
+      puts max_temp
 
       (0..period-1).each do |p|
-        temp_time = @regress_return_log[0]*((Math.log(now_formatedtime + p/6))-@regress_return_log[1])**2
-        prediction_array = highestTemperature * (temp_time/max_temp)
+        temp_time = @regress_return_log[0]*(Math.log(now_formatedtime + p/6.0))+@regress_return_log[1]
+        prediction_array << highestTemperature * (temp_time/max_temp)
         probability_array << (probability*@probability_log).abs
       end
       result_prediction << prediction_array
@@ -363,7 +367,7 @@ class PredictionUtil
       end
       max_temp = result.max
       (1..period).each do |p|
-        temp_time = Math.exp((now_formatedtime + p/6) * @regress_return_exp[0]) + @regress_return_exp[1]
+        temp_time = Math.exp((now_formatedtime + p/6.0) * @regress_return_exp[0]) + @regress_return_exp[1]
         prediction_array << (highestTemperature * (temp_time/max_temp)).abs
         probability_array << (probability*@probability_exp).abs
       end
