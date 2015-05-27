@@ -2,6 +2,10 @@ class PredictionController < ApplicationController
   def postcode_weather
     @post_code=params[:post_code]
     @period=params[:period]
+    respond_to do |format|
+      format.html
+      format.json { render json: weather_data_recording.to_json_by_postcode_and_period(@period_toi,@station.name,predict_temp,predict_rain,predict_win_dir,predict_wind_speed)}
+    end
   end
 
   def coordinate_weather
@@ -65,5 +69,9 @@ class PredictionController < ApplicationController
     # @predict_rain = preditUtil.prediction(@station.name, x_formated_time, rain_y_data, @period_toi, "rain")
     # @predict_win_dir = preditUtil.prediction(@station.name, x_formated_time, wind_dir_y_data, @period_toi, "wind_dir")
     # @predict_wind_speed = preditUtil.prediction(@station.name, x_formated_time, wind_speed_y_data, @period_toi, "wind_speed")
+    respond_to do |format|
+      format.html
+      format.json { render json: weather_data_recording.to_json_by_lat_long_and_period(@period_toi,@lat,@long,predict_temp,predict_rain,predict_win_dir,predict_wind_speed)}
+    end
   end
 end

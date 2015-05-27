@@ -7,41 +7,37 @@ class WeatherDataRecording < ActiveRecord::Base
 
 
   def self.to_json_by_location_and_date date,w_record,w_current
-    #record =  Weather_data_recording.find_by(location_id=>location,recording_time=>date.currentTime).temperature_records
     output_list= w_record.map do |p|
       {:time=>p.recording_time,:temp=>p.temperature_record.cel_degree,:precip=>p.rain_fall_record.precip_amount,:wind_direction=>p.wind_record.win_dir,:wind_speed=>p.wind_record.win_speed}
     end
-    {:date=>date, :current_temp=>w_current.temperature_record.cel_degree, :current_cond=>w_current.condition,:measurements=>output_list}
+    if(w_current.blank?)
+     {:date=>date.strftime("%d-%m-%Y"), :current_temp=>"", :current_cond=>"",:measurements=>output_list}
+    else  
+     {:date=>date.strftime("%d-%m-%Y"), :current_temp=>w_current['temperature'], :current_cond=>w_current['summary'],:measurements=>output_list}
+    end
   end
   
-  def self.to_json_by_postcode_and_period postcode,period
-      # return_hash=Hash.new
-      # location_id=Locations.find_by(post_code=>postcode).id
-      # time = Time.now
-      # #search_past24 location_id
-      # if(period.eql?("10"||"30"||"60"||"120"||"180")
-        # period.step(0,180) do |t|
-        # return_hash[t]={:time=>(time+(600*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>,:probability=>},:temp=>{:value=>,:probability=>},:wind_speed=>{:value=>,:probability=>},:wind_direction=>{:value=>,:probability=>}}
-        # end
-        # {:location_id=>location_id,:predictions=>return_hash}
-      # else
-        # puts "You can only choose the period from 10,30,60,120,180."
+  def self.to_json_by_postcode_and_period period,name,predict_temp,predict_rain,predict_win_dir,predict_wind_speed
+      return_hash=Hash.new
+      time = Time.now
+      i=0
+      period.step(0,180) do |t|
+        return_hash[t]={:time=>(time+(60*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>predict_rain[0][i],:probability=>predict_rain[1][i]},:temp=>{:value=>predict_temp[0][i],:probability=>predict_temp[1][i]},:wind_speed=>{:value=>predict_wind_speed[0][i],:probability=>predict_wind_speed[1][i]},:wind_direction=>{:value=>predict_win_dir[0][i],:probability=>predict_win_dir[1][i]}}
+        i+=1
+      end
+      {:location_id=>name,:predictions=>return_hash}   
   end
   
   
-  def self.to_json_by_lat_long_and_period lat,long,period
-      # return_hash=Hash.new
-      # location_id=Locations.find_by(lat=>lat AND lng=>long).id
-      # time = Time.now
-      # #search_past24 location_id
-      # if(period.eql?("10"||"30"||"60"||"120"||"180")
-        # period.step(0,180) do |t|
-        # return_hash[t]={:time=>(time+(600*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>,:probability=>},:temp=>{:value=>,:probability=>},:wind_speed=>{:value=>,:probability=>},:wind_direction=>{:value=>,:probability=>}}
-        # end
-      # {:lattitude=>lat,:longitude=>long,:predictions=>return_hash}
-      # else
-        # puts "You can only choose the period from 10,30,60,120,180."
-#   
+  def self.to_json_by_lat_long_and_period period,lat,long,predict_temp,predict_rain,predict_win_dir,predict_wind_speed
+      return_hash=Hash.new
+      time = Time.now
+      i=0
+      period.step(0,180) do |t|
+        return_hash[t]={:time=>(time+(60*t)).strftime("%H:%M%P %d-%m-%Y"),:rain=>{:value=>predict_rain[0][i],:probability=>predict_rain[1][i]},:temp=>{:value=>predict_temp[0][i],:probability=>predict_temp[1][i]},:wind_speed=>{:value=>predict_wind_speed[0][i],:probability=>predict_wind_speed[1][i]},:wind_direction=>{:value=>predict_win_dir[0][i],:probability=>predict_win_dir[1][i]}}
+        i+=1
+      end
+      {:lattitude=>lat,:longitude=>long,:predictions=>return_hash}
   end
   
   
