@@ -6,6 +6,10 @@
 			Nearest Meteorology Station: <%= @nearest_station.name%>
 			<br/>
 			Distance: <%= @distances.round(2)%> miles from station to the location
+			<br/>
+			Current Condition: <%= @current_weather['summary']%>
+			<br/>
+			Current Temperature: <%= @current_weather['temperature']%>
 		</div>
 		<div class='panel-body'>
 			<table class='display datatable'>
