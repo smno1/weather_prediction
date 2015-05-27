@@ -23,8 +23,7 @@ class DataController < ApplicationController
       query_time=nil
     end
     @wrecs=WeatherDataRecording.where(:recording_time=>query_time.at_beginning_of_day..query_time.at_end_of_day,:station_id=>@nearest_station.id)
-    @current_weather=WeatherDataRecording.where(:recording_time=>DateTime.now-1.hour..DateTime.now,
-    :station_id=>@nearest_station.id).order(recording_time :desc).try(:first)
+    @current_weather=BaseFunctionUtil.get_location_current_data(@l.lat.to_s+","+@l.lng.to_s)
 
     respond_to do |format|
       format.html

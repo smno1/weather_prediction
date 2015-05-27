@@ -1,5 +1,8 @@
 source 'https://rubygems.org'
 
+#schedule gem
+gem 'rufus-scheduler'
+
 #prediction gem
 gem 'statsample'
 
