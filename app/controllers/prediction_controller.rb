@@ -14,7 +14,7 @@ class PredictionController < ApplicationController
       lng=l.lng
       station=Station.closest(:origin => [lat,lng]).first
       distances=station.distance_from([lat,lng],:units=>:miles)
-      @stations_prediction_Hash["station"] = get_prediction(distances, dt, station, @period_toi)
+      @stations_prediction_Hash[l.id] = get_prediction(distances, dt, station, @period_toi)
     end
 
     respond_to do |format|
@@ -24,6 +24,7 @@ class PredictionController < ApplicationController
   end
 
   def coordinate_weather
+    @columns=["prediction","temperature","rain","wind_dir","wind_speed"]
     @lat=params[:lat]
     @long=params[:long]
     @station=Station.closest(:origin => [@lat,@long]).first
@@ -39,7 +40,7 @@ class PredictionController < ApplicationController
 
     @return_prediction["temperature"][0].each do |x|
 
-  end
+    end
 
     #get the prediction of temperature, rain and wind in the form of [[10,20,30], [0.9,0.8,0.7]]
     # @predict_rain = preditUtil.prediction(@station.name, x_formated_time, rain_y_data, @period_toi, "rain")

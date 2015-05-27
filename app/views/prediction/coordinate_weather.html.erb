@@ -1,5 +1,4 @@
 <% provide(:page_header,"Coodination Prediction")%>
-<%@columns=["prediction","temperature","rain","wind_dir","wind_speed"]%>
 <% predictions,probablity=(0..1).map do |i| %>
 <%@return_prediction["temperature"][i].zip @return_prediction["rain"][i],@return_prediction["wind_dir"][i],@return_prediction["wind_speed"][i]%>
 <% end%>
