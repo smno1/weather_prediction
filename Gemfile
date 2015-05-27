@@ -1,5 +1,9 @@
 source 'https://rubygems.org'
 
+#prediction gem
+gem 'statsample'
+
+#statsample gem
 
 #URL scraping gem
 gem 'nokogiri'

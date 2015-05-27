@@ -1,2 +1,25 @@
-<%= @post_code%>
-<%= @date%>
+<% provide(:page_header,"PostCode: <%= @post_code%>)%>
+
+	<br/>
+
+<% @wrecs.each do |station,recs|%>
+	<%= station.name%>
+	<br/>
+	<%recs.each do |r|%>
+		Recording time:
+		<%= r.recording_time.strftime("%F %R")%>
+		<br/>
+		Rainfall:
+		<%= r.rain_fall_record.precip_amount%>
+		<br/>
+		Temperature:
+		<%= r.temperature_record.cel_degree%>
+		<br/>
+		Wind Direction:
+		<%= r.wind_record.win_dir%>
+		<br/>
+		Wind Speed km/h:
+		<%= r.wind_record.win_speed%>
+		<br/>
+	<%end%>
+<%end%>
