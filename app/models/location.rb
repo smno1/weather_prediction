@@ -33,7 +33,7 @@ class Location < ActiveRecord::Base
     output_list=
     wrecs.map{|k,v| 
         measurement_list= v.map do |d|
-          {:time=>d.recording_time,:temp=>d.temperature_record.cel_degree,:precip=>d.rain_fall_record.precip_amount,:wind_direction=>d.wind_record.win_dir,:wind_speed=>d.wind_record.win_speed}
+          {:time=>d.recording_time.strftime("%d-%m-%Y"),:temp=>d.temperature_record.cel_degree,:precip=>d.rain_fall_record.precip_amount,:wind_direction=>d.get_wind_dir,:wind_speed=>d.wind_record.win_speed}
         end
         {:id=>k.name, :lat=>k.lat,:lon=>k.lng,:last_update=>k.updated_at,:measurements=>measurement_list}
     }

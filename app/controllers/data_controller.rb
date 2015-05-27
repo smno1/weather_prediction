@@ -27,7 +27,7 @@ class DataController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.json { render json: WeatherDataRecording.to_json_by_location_and_date(@date,@wrecs,@current_weather) }
+      format.json { render json: WeatherDataRecording.to_json_by_location_and_date(query_time,@wrecs,@current_weather) }
     end
   end
 
@@ -51,7 +51,7 @@ class DataController < ApplicationController
     
     respond_to do |format|
       format.html
-      format.json { render json: Location.to_json_by_postcode_and_date(@date,@wrecs) }
+      format.json { render json: Location.to_json_by_postcode_and_date(query_time,@wrecs) }
     end
   end
 

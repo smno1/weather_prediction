@@ -4,11 +4,13 @@ class WeatherDataRecording < ActiveRecord::Base
   has_one :temperature_record
   has_one :wind_record
   
-
+  def get_wind_dir
+    BaseFunctionUtil.number_to_win_dir self.wind_record.win_dir
+  end
 
   def self.to_json_by_location_and_date date,w_record,w_current
     output_list= w_record.map do |p|
-      {:time=>p.recording_time,:temp=>p.temperature_record.cel_degree,:precip=>p.rain_fall_record.precip_amount,:wind_direction=>p.wind_record.win_dir,:wind_speed=>p.wind_record.win_speed}
+      {:time=>p.recording_time,:temp=>p.temperature_record.cel_degree,:precip=>p.rain_fall_record.precip_amount,:wind_direction=>p.get_wind_dir,:wind_speed=>p.wind_record.win_speed}
     end
     if(w_current.blank?)
      {:date=>date.strftime("%d-%m-%Y"), :current_temp=>"", :current_cond=>"",:measurements=>output_list}
