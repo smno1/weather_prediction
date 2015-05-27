@@ -1,14 +1,7 @@
-# require 'csv'
-# require 'matrix'
-#require 'statsample'
-# require_relative 'base_function_util'
-# require_relative 'max_data'
-
 require 'nokogiri'
 require 'open-uri'
 
 class PredictionUtil
-  include Matrix
   def initialize
     @se_linear = +1.0/0.0
     @se_poly = +1.0/0.0
@@ -17,12 +10,6 @@ class PredictionUtil
     @regress_return = []
     @flag = ""
     @highest_temp = ""
-    @prediction = []
-    @probability = []
-    @probability_linear
-    @probability_poly
-    @probability_exp
-    @probability_log
     @result_prediction = []
   end
 
@@ -63,10 +50,10 @@ class PredictionUtil
                   data_array_dir  << BaseFunctionUtil.win_dir_to_number(dir)
                   data_array_speed << x.css("tr")[i].css("td")[7].text.to_f
                 end
-                @max_temp_data[read.css("h1").text[/for\ ([A-Za-z ]+)/,1]] = data_array
-                @max_rain[read.css("h1").text[/for\ ([A-Za-z ]+)/,1]] = data_array_rain
-                @max_wind_dir[read.css("h1").text[/for\ ([A-Za-z ]+)/,1]] = data_array_dir
-                @max_wind_speed[read.css("h1").text[/for\ ([A-Za-z ]+)/,1]] = data_array_speed
+                @max_temp_data[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array
+                @max_rain[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_rain
+                @max_wind_dir[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_dir
+                @max_wind_speed[read.css("h1").text[/for\ ([A-Za-z]+)/,1]] = data_array_speed
               end
             end
           end
@@ -78,8 +65,6 @@ class PredictionUtil
   #------------------------------linear--------------------------------------------
   def linear x_data, y_data
     temp = []
-    puts "----------test x_data------"
-    puts x_data.inspect
     x_vector = x_data.to_vector(:scale)
     y_vector = y_data.to_vector(:scale)
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
@@ -123,7 +108,6 @@ class PredictionUtil
     y_Average=y_array.inject{|r,a|r+a}.to_f/y_array.size
     array = []
     y_estimate = []
-    # get the probability of the polynomial regression
     (2..10).each{|x| array << (variation x_array, y_array, x)}
     index = (array.index(array.min) + 2)
     array1 = regress x_array, y_array, index
@@ -149,7 +133,7 @@ class PredictionUtil
     @se_poly = variation x_array, y_array, index
   end
 
-#————————————————————————————Exponential regression——————————————————————————————
+  #————————————————————————————Exponential regression——————————————————————————————
   def exponential x_data, y_data
     temp = []
     log_y1_data = y_data.map { |y| Math.log(y)}
@@ -231,6 +215,8 @@ class PredictionUtil
     now_formatedtime = 24*hour/24 + min
     period = period/10
     i = 0
+    prediction_array = []
+    probability_array = []
     result = []
     result_prediction = []
     best_fit x_data, y_data
@@ -251,12 +237,13 @@ class PredictionUtil
           sum = (sum + x)*(now_formatedtime + p/6)
         end
         temp_time = sum/(now_formatedtime + p/6)
-        @prediction << highestTemperature * (temp_time/max_temp)
-        @probability << probability*@probability_poly
+        prediction_array << highestTemperature * (temp_time/max_temp)
+        probability_array << (probability*@probability_poly).abs
       end
-      result_prediction << @prediction
-      result_prediction << @probability
-      puts "Here is the poly prediction: #{result_prediction}"
+      result_prediction << prediction_array
+      result_prediction << probability_array
+      return result_prediction
+      # puts "Here is the poly prediction: #{result_prediction}"
     elsif @flag.eql?("linear")
       while i< x_data.length
         result[i] = x_data[i]*@regress_return[0] + @regress_return[1]
@@ -266,13 +253,14 @@ class PredictionUtil
 
       (1..period).each do |p|
         temp_time =  (now_formatedtime + p/6)*@regress_return[0] + @regress_return[1]
-        @prediction << highestTemperature * (temp_time/max_temp)
-        @probability << probability*@probability_linear
+        prediction_array << highestTemperature * (temp_time/max_temp)
+        probability_array << (probability*@probability_linear).abs
       end
 
-      result_prediction << @prediction
-      result_prediction << @probability
-      puts "Here is the linear prediction: #{result_prediction}"
+      result_prediction << prediction_array
+      result_prediction << probability_array
+      return result_prediction
+      # puts "Here is the linear prediction: #{result_prediction}"
     elsif @flag.eql?("log")
       while i< x_data.length
         result[i] = @regress_return[0]*((Math.log(x_data[i]))-@regress_return[1])**2
@@ -282,12 +270,13 @@ class PredictionUtil
 
       (0..period-1).each do |p|
         temp_time = @regress_return[0]*((Math.log(now_formatedtime + p/6))-@regress_return[1])**2
-        @prediction = highestTemperature * (temp_time/max_temp)
-        @probability << probability*@probability_log
+        prediction_array = highestTemperature * (temp_time/max_temp)
+        probability_array << (probability*@probability_log).abs
       end
-      result_prediction << @prediction
-      result_prediction << @probability
-      puts "Here is the log prediction: #{@prediction}"
+      result_prediction << prediction_array
+      result_prediction << probability_array
+      return result_prediction
+      # puts "Here is the log prediction: #{@prediction}"
     elsif @flag.eql?("exp")
       while i< x_data.length
         result[i] = Math.exp(x_data[i]*@regress_return[0]) + @regress_return[1]
@@ -296,12 +285,13 @@ class PredictionUtil
       max_temp = result.max
       (1..period).each do |p|
         temp_time = Math.exp((now_formatedtime + p/6) * @regress_return[0]) + @regress_return[1]
-        @prediction = highestTemperature * (temp_time/max_temp)
-        @probability << probability*@probability_exp
+        prediction_array << (highestTemperature * (temp_time/max_temp)).abs
+        probability_array << (probability*@probability_exp).abs
       end
-      result_prediction << @prediction
-      result_prediction << @probability
-      puts "Here is the exp prediction: #{@prediction}"
+      result_prediction << prediction_array
+      result_prediction << probability_array
+      return result_prediction
+      # puts "Here is the exp prediction: #{@prediction}"
     end
   end
 
@@ -315,38 +305,29 @@ class PredictionUtil
     y_data_hi_rain = @max_rain[location]
     y_data_hi_wind_dir = @max_wind_dir[location]
     y_data_hi_wind_speed = @max_wind_speed[location]
-    
-    puts @max_temp_data.inspect
-    puts location.inspect
 
-# choose which set of data to get(temperature, wind or rain)
+    # choose which set of data to get(temperature, wind or rain)
     #generate the data set of x_data_hi
     i = 1
     j = 0
-    while i < x_data_hi.length+1
+    while i < y_data_hi_temp.length+1
       x_data_hi[j] = i
       i = i+1
       j = j+1
     end
     
     @return_prediction = Hash.new
-    
     probability_temp = prediction_highTemp(x_data_hi, y_data_hi_temp, 1)   
-    @return_prediction["temperature"] = prediction_model(x_data, y_data_temp, period, @highest_temp, probability_temp)
+    @return_prediction['temperature'] = prediction_model(x_data, y_data_temp, period, @highest_temp, probability_temp)
     
     probability_rain = prediction_highTemp(x_data_hi, y_data_hi_rain, 1)
-    @return_prediction["rain"] = prediction_model(x_data, y_data_rain, period, @highest_temp, probability_rain)
+    @return_prediction['rain'] = prediction_model(x_data, y_data_rain, period, @highest_temp, probability_rain)
    
-    probability_wind_dir = prediction_highTemp(x_data_hi, y_data_hi_temp, 1)
-    @return_prediction["wind_dir"] = prediction_model(x_data, y_data_wind_dir, period, @highest_temp, probability_wind_dir)
+    probability_wind_dir = prediction_highTemp(x_data_hi, y_data_hi_wind_dir, 1)
+    @return_prediction['wind_dir'] = prediction_model(x_data, y_data_wind_dir, period, @highest_temp, probability_wind_dir)
     
-    probability_wind_speed = prediction_highTemp(x_data_hi, y_data_hi_temp, 1)
-    @return_prediction["wind_speed"] = prediction_model(x_data, y_data_wind_speed, period, @highest_temp, probability_wind_speed)
-
-    # #get the probability of highest temperature, rain or wind as a argument of prediction_model
-    # probability = prediction_highTemp(x_data_hi, y_data_hi, 1)   
-    # #get the result of the prediction in the form of [[10,20,30], [0.9,0.8,0.7]]
-    # result_prediction = prediction_model(x_data, y_data, period, @highest_temp, probability)
+    probability_wind_speed = prediction_highTemp(x_data_hi, y_data_hi_wind_speed, 1)
+    @return_prediction['wind_speed'] = prediction_model(x_data, y_data_wind_speed, period, @highest_temp, probability_wind_speed)
   end
-end
 
+end

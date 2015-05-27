@@ -57,7 +57,7 @@ class PredictionController < ApplicationController
     
     
     # return a hash contains the prediction of temperature, rain, wind and their corresponding probability
-    # int the form of {:temperature [[10,20,30], [0.9,0.8,0.7]], :rain [[10,20,30], [0.9,0.8,0.7]], :wind_dir [[10,20,30], [0.9,0.8,0.7]], :wind_speed [[10,20,30], [0.9,0.8,0.7]]}
+    # in the form of {:temperature [[10,20,30], [0.9,0.8,0.7]], :rain [[10,20,30], [0.9,0.8,0.7]], :wind_dir [[10,20,30], [0.9,0.8,0.7]], :wind_speed [[10,20,30], [0.9,0.8,0.7]]}
     @return_prediction = preditUtil.prediction("Charlton", x_formated_time, temp_y_data, rain_y_data, wind_dir_y_data, wind_speed_y_data, @period_toi)
     
     
