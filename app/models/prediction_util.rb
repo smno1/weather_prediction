@@ -73,6 +73,7 @@ class PredictionUtil
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     linear = Statsample::Regression.multiple(ds,'y')
     @probability_linear = linear.r2_adjusted().round(2)
+    puts "======@probability_linear========#{@probability_linear}=============@probability_linear====="
     temp[0] = linear.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = linear.constant.round(2)
     @regress_return_linear = temp
@@ -142,6 +143,7 @@ class PredictionUtil
       end
 
       @probability_poly = (ssr/sst).round(2)
+          puts "======@probability_poly========#{@probability_poly}=============@probability_poly====="
       @se_poly = variation x_array, y_array, index
     else
       @se_poly =Float::NAN
@@ -158,6 +160,7 @@ class PredictionUtil
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     expon = Statsample::Regression.multiple(ds,'y')
     @probability_exp = expon.r2_adjusted().round(2)
+    puts "======@probability_exp========#{@probability_exp}=============@probability_exp====="
     temp[0] = expon.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = (Math.exp(expon.constant)).round(2)
     @regress_return_exp = temp
@@ -174,6 +177,7 @@ class PredictionUtil
     ds = {'x'=>x_vector,'y'=>y_vector}.to_dataset
     log = Statsample::Regression.multiple(ds,'y')
     @probability_log = log.r2_adjusted().round(2)
+    puts "======@probability_log========#{@probability_log}=============@probability_log====="
     temp[0] = log.coeffs.fetch("x"){|k|puts k}.round(2)
     temp[1] = log.constant.round(2)
     @regress_return_log = temp
@@ -316,8 +320,8 @@ class PredictionUtil
           sum = (sum + x)*(now_formatedtime + p/6.0)
         end
         temp_time = sum/(now_formatedtime + p/6.0)
-        prediction_array << highestTemperature * (temp_time/max_temp)
-        probability_array << (probability*@probability_poly).abs
+        prediction_array << (highestTemperature * (temp_time/max_temp)).round(3)
+        probability_array << ((probability*@probability_poly).abs).round(3)
       end
       result_prediction << prediction_array
       result_prediction << probability_array
@@ -332,8 +336,8 @@ class PredictionUtil
 
       (0..period-1).each do |p|
         temp_time =  (now_formatedtime + p/6.0)*@regress_return_linear[0] + @regress_return_linear[1]
-        prediction_array << highestTemperature * (temp_time/max_temp)
-        probability_array << (probability*@probability_linear).abs
+        prediction_array << (highestTemperature * (temp_time/max_temp)).round(3)
+        probability_array << ((probability*@probability_linear).abs).round(3)
       end
 
       result_prediction << prediction_array
@@ -353,8 +357,8 @@ class PredictionUtil
 
       (0..period-1).each do |p|
         temp_time = @regress_return_log[0]*(Math.log(now_formatedtime + p/6.0))+@regress_return_log[1]
-        prediction_array << highestTemperature * (temp_time/max_temp)
-        probability_array << (probability*@probability_log).abs
+        prediction_array << (highestTemperature * (temp_time/max_temp)).round(3)
+        probability_array << ((probability*@probability_log).abs).round(3)
       end
       result_prediction << prediction_array
       result_prediction << probability_array
@@ -368,8 +372,8 @@ class PredictionUtil
       max_temp = result.max
       (1..period).each do |p|
         temp_time = Math.exp((now_formatedtime + p/6.0) * @regress_return_exp[0]) + @regress_return_exp[1]
-        prediction_array << (highestTemperature * (temp_time/max_temp)).abs
-        probability_array << (probability*@probability_exp).abs
+        prediction_array << (highestTemperature * ((temp_time/max_temp)).abs).round(3)
+        probability_array << ((probability*@probability_exp).abs).round(3)
       end
       result_prediction << prediction_array
       result_prediction << probability_array
