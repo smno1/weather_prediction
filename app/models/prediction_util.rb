@@ -120,29 +120,34 @@ class PredictionUtil
       array << (variation x_array, y_array, x)}
     # puts array.inspect
     # puts array.min
-    index = (array.index(array.min) + 2)
-    array1 = regress x_array, y_array, index
-    @regress_return_poly = array1.reverse
-    ssr = 0
-    sst = 0
-    i = 0
-    while i < x_array.length
-      sum = 0
-      @regress_return_poly.each do |x|
-        sum = (sum + x)*x_array[i]
+    index = BaseFunctionUtil.get_min_from_a_mix_array array
+    unless index==-1
+      array1 = regress x_array, y_array, index
+      @regress_return_poly = array1.reverse
+      ssr = 0
+      sst = 0
+      i = 0
+      while i < x_array.length
+        sum = 0
+        @regress_return_poly.each do |x|
+          sum = (sum + x)*x_array[i]
+        end
+        y_estimate[i] = (sum/x_array[i])
+        i += 1
       end
-      y_estimate[i] = (sum/x_array[i])
-      i += 1
-    end
 
-    for i in(0..y_array.length-1)
-      ssr += (y_estimate[i] - y_Average)**2
-      sst += (y_array[i] - y_Average)**2
-    end
+      for i in(0..y_array.length-1)
+        ssr += (y_estimate[i] - y_Average)**2
+        sst += (y_array[i] - y_Average)**2
+      end
 
-    @probability_poly = (ssr/sst).round(2)
-    @se_poly = variation x_array, y_array, index
+      @probability_poly = (ssr/sst).round(2)
+      @se_poly = variation x_array, y_array, index
+    else
+      @se_poly =Float::NAN
+    end
   end
+  
 
   #————————————————————————————Exponential regression——————————————————————————————
   def exponential x_data, y_data
@@ -216,7 +221,7 @@ class PredictionUtil
     # puts "=========test best fit==========="
     # puts mini_var.inspect
     # puts "=========test best fit==========="
-    index = mini_var.index(mini_var.min)
+    index = BaseFunctionUtil.get_min_from_a_mix_array mini_var
     case index
     when 0
       @flag = "linear"
@@ -231,22 +236,44 @@ class PredictionUtil
 
   def prediction_highTemp x_data, y_data, offset_time
     #例：x_data提供1，2，3，4，5.。。30 那么预测第30+offset_time天的最高温
+    puts "x_data highTemp"
+    puts x_data.inspect
+    puts "y_data highTemp"
+    puts y_data.inspect
     best_fit x_data, y_data
-    if @flag.eql?("poly")
+    puts "@flag"
+    puts @flag
+      if @flag.eql?("poly")
       sum = 0
       @regress_return_poly.each do |x|
         sum = (sum + x)*(x_data[-1] + offset_time)
       end
       @highest_temp = sum/(x_data[-1] + offset_time)
+      puts "@highest_temp"
+      puts @highest_temp
+      puts "@probability_poly"
+      puts @probability_poly
     return @probability_poly
     elsif @flag.eql?("linear")
       @highest_temp = @regress_return_linear[0]*(x_data[-1] + offset_time) + @regress_return_linear[1]
+      puts "@highest_temp"
+      puts @highest_temp
+      puts "@probability_linear"
+      puts @probability_linear
     return  @probability_linear
     elsif @flag.eql?("log")
-      @highest_temp = @regress_return_log[0]*((Math.log(x_data[-1] + offset_time))-@regress_return_log[1])**2
+      @highest_temp = @regress_return_log[0]*((Math.log(x_data[-1] + offset_time)))+@regress_return_log[1]
+      puts "@highest_temp"
+      puts @highest_temp
+      puts" @probability_log"
+      puts @probability_log
     return @probability_log
     elsif @flag.eql?("exp")
       @highest_temp = Math.exp((x_data[-1] + offset_time) * @regress_return_exp[0]) + @regress_return_exp[1]
+      puts "@highest_temp"
+      puts @highest_temp
+      puts "@probability_exp"
+      puts @probability_exp
     return @probability_exp
     end
   end
@@ -361,6 +388,14 @@ class PredictionUtil
     y_data_hi_rain = @max_rain[location]
     y_data_hi_wind_dir = @max_wind_dir[location]
     y_data_hi_wind_speed = @max_wind_speed[location]
+    puts "@max_temp_data[location]"
+    puts y_data_hi_temp.inspect
+    puts "@max_rain[location]"
+    puts y_data_hi_rain.inspect
+    puts "@max_wind_dir[location]"
+    puts y_data_hi_wind_dir.inspect 
+    puts "@max_wind_speed[location]"
+    puts y_data_hi_wind_speed.inspect
 
     # choose which set of data to get(temperature, wind or rain)
     #generate the data set of x_data_hi
@@ -385,18 +420,22 @@ class PredictionUtil
     puts "=============test result==========****************"
     puts  "@return_prediction['rain']"
     puts  @return_prediction['rain']
+    puts "=============test result==========****************"
    
     probability_wind_dir = prediction_highTemp(x_data_hi, y_data_hi_wind_dir, 1)
     @return_prediction['wind_dir'] = prediction_model(x_data, y_data_wind_dir, period, @highest_temp, probability_wind_dir)
     puts "=============test result==========****************"
     puts "@return_prediction['wind_dir']"
     puts @return_prediction['wind_dir']
+    puts "=============test result==========****************"
    
     probability_wind_speed = prediction_highTemp(x_data_hi, y_data_hi_wind_speed, 1)
     @return_prediction['wind_speed'] = prediction_model(x_data, y_data_wind_speed, period, @highest_temp, probability_wind_speed)
     puts "=============test result==========****************"
     puts  "@return_prediction['wind_speed']"
     puts  @return_prediction['wind_speed']
+    puts "=============test result==========****************"
+    @return_prediction
   end
 
 

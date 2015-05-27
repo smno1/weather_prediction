@@ -56,8 +56,16 @@ class PredictionController < ApplicationController
 
     #turn the time into required form
     x_data.each do |time|
-      x_formated_time << time.hour + time.min/60
+      x_formated_time << time.hour + time.min/60.0
     end
+    
+    puts "=====================formated time================================"
+    puts x_formated_time.inspect
+    puts "=====================formated time================================"
+    
+    puts "=====================formated time================================"
+    puts temp_y_data.inspect
+    puts "=====================formated time================================"
     
     i = 1
     while i < 49
@@ -70,7 +78,7 @@ class PredictionController < ApplicationController
     
     # return a hash contains the prediction of temperature, rain, wind and their corresponding probability
     # in the form of {:temperature [[10,20,30], [0.9,0.8,0.7]], :rain [[10,20,30], [0.9,0.8,0.7]], :wind_dir [[10,20,30], [0.9,0.8,0.7]], :wind_speed [[10,20,30], [0.9,0.8,0.7]]}
-    @return_prediction = preditUtil.prediction("Charlton", x_data_test, temp_y_data, rain_y_data, wind_dir_y_data, wind_speed_y_data, @period_toi)
+    @return_prediction = preditUtil.prediction("Charlton", x_formated_time, temp_y_data, rain_y_data, wind_dir_y_data, wind_speed_y_data, @period_toi)
     
     
     #get the prediction of temperature, rain and wind in the form of [[10,20,30], [0.9,0.8,0.7]]
