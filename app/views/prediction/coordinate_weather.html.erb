@@ -1,10 +1,18 @@
-<%= @lat%>
-<%= @long%>
-<br/>
-<%= @period%>
-<br/>
+<% provide(:page_header,"Coodination Prediction")%>
+<%@columns=["prediction","temperature","rain","wind_dir","wind_speed"]%>
+<% predictions,probablity=(0..1).map do |i| %>
+<%@return_prediction["temperature"][i].zip @return_prediction["rain"][i],@return_prediction["wind_dir"][i],@return_prediction["wind_speed"][i]%>
+<% end%>
+<div class='col-lg-12'>
+	<div class='panel panel-default'>
+		<div class='panel-heading'>
+			Prediction <%= @lat%>,<%= @long%> the next <%= @period%><br/>
+			Distance to the cloest station <%=@station.name%> : <%=@distances%> miles <br/>
+		</div>
+		<div class='panel-body'>
+			<%= render :partial=>'prediction_weather_table', :locals => {:columns => @columns, :predictions=>predictions,:probablity=>probablity}%>
+		</div>
+	</div>
+</div>
 
-<%= @return_prediction.inspect%>
-<br/>
-<%=@station.id%> <br/>
-Distance:<%=@distances%> miles <br/>
+

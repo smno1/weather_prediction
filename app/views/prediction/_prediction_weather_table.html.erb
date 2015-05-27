@@ -1,0 +1,20 @@
+<table class='display datatable'>
+	<thead>
+		<tr>
+			<%columns.each do |c|%>
+			<th class="text-center"><%= c.titleize%></th>
+			<%end%>
+		</tr>
+	</thead>
+
+	<tbody>
+		<%predictions.each_with_index do |p,i|%>
+		<tr>
+		  <td class='col-min-width text-center'>in <%= i*10 %> minutes</td>
+		  <%(0..p.count-1).each do |n|%>	
+			<td class='col-min-width text-center'><%= p[n] %>(<%=probablity[i][n]%>)</td>
+		  <%end%>
+		</tr>
+		<%end%>
+	</tbody>
+</table>
