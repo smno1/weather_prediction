@@ -1,25 +1,16 @@
-<% provide(:page_header,"PostCode: "+@post_code)%>
+<% provide(:page_header,"Meteorology Station with in PostCode: "+@post_code)%>
 
 	<br/>
-
 <% @wrecs.each do |station,recs|%>
-	<%= station.name%>
-	<br/>
-	<%recs.each do |r|%>
-		Recording time:
-		<%= r.recording_time.strftime("%F %R")%>
-		<br/>
-		Rainfall:
-		<%= r.rain_fall_record.precip_amount%>
-		<br/>
-		Temperature:
-		<%= r.temperature_record.cel_degree%>
-		<br/>
-		Wind Direction:
-		<%=BaseFunctionUtil.number_to_win_dir  r.wind_record.win_dir%>
-		<br/>
-		Wind Speed km/h:
-		<%= r.wind_record.win_speed%>
-		<br/>
-	<%end%>
+<div class='col-lg-12'>
+	<div class='panel panel-default'>
+		<div class='panel-heading'>
+			Meteorology Station: <%= station.name%>
+		</div>
+		<div class='panel-body'>
+			<%= render :partial=>'weather_data_table', :locals => {:attributes => @attributes, :wrecs=>recs}%>
+		</div>
+	</div>
+</div>
+
 <%end%>

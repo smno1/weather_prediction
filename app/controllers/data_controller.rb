@@ -32,6 +32,7 @@ class DataController < ApplicationController
   end
 
   def postcode_weather
+    @attributes=["record_time","rainfall","temperature","wind_dir","win_speed"]
     @post_code=params[:post_code]
     @location_ids = Location.where(:post_code=>@post_code)
     @date=params[:date]

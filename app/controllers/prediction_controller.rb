@@ -2,6 +2,13 @@ class PredictionController < ApplicationController
   def postcode_weather
     @post_code=params[:post_code]
     @period=params[:period]
+    @locations = Location.where(:post_code=>@post_code)
+    @locations.each do |l|
+      lat=l.lat
+      lng=l.lng
+      station=Station.closest(:origin => [lat,lng]).first
+      distances=station.distance_from([lat,lng],:units=>:miles)
+    end
     respond_to do |format|
       format.html
       format.json { render json: weather_data_recording.to_json_by_postcode_and_period(@period_toi,@station.name,predict_temp,predict_rain,predict_win_dir,predict_wind_speed)}
@@ -11,9 +18,10 @@ class PredictionController < ApplicationController
   def coordinate_weather
     @lat=params[:lat]
     @long=params[:long]
-    @station=Station.closest(:origin => [@lat,@lng]).first
+    @station=Station.closest(:origin => [@lat,@long]).first
     @distances=@station.distance_from([@lat,@long],:units=>:miles)
     @period=params[:period]
+    
     @period_toi = @period.to_i
     dt=DateTime.now
     dt-=1.day
@@ -91,4 +99,5 @@ class PredictionController < ApplicationController
         @return_prediction["temperature"],@return_prediction["rain"],@return_prediction["wind_dir"],@return_prediction["wind_speed"])}
     end
   end
+  
 end

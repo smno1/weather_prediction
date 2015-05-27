@@ -12,27 +12,7 @@
 			Current Temperature: <%= @current_weather['temperature']%>
 		</div>
 		<div class='panel-body'>
-			<table class='display datatable'>
-				<thead>
-					<tr>
-						<%@attributes.each do |c|%>
-						<th class='col-min-width text-center'><%= c.titleize%></th>
-						<%end%>
-					</tr>
-				</thead>
-
-				<tbody>
-					<% @wrecs.each do |r|%>
-					<tr>
-						<td class='col-min-width text-center'> <%= r.recording_time.strftime("%F %R")%> </td>
-						<td class='col-min-width text-center'> <%= r.rain_fall_record.precip_amount%> </td>
-						<td class='col-min-width text-center'> <%= r.temperature_record.cel_degree%> </td>
-						<td class='col-min-width text-center'> <%= BaseFunctionUtil.number_to_win_dir r.wind_record.win_dir%> </td>
-						<td class='col-min-width text-center'> <%= r.wind_record.win_speed%> </td>
-					</tr>
-					<%end%>
-				</tbody>
-			</table>
+			<%= render :partial=>'weather_data_table', :locals => {:attributes => @attributes, :wrecs=>@wrecs}%>
 		</div>
 	</div>
 </div>
