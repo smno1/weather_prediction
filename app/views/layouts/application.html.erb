@@ -6,12 +6,17 @@
 		<%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
 		<%= csrf_meta_tags %>
 	</head>
+	
 <body onload="startTime()">
+	<div class="b">
+<div class="transbox">
 		<div class="row">
 			<div class="col-lg-12">
-				<h3 class="page-header"><%= yield :page_header %></h3>
+				<p><h3 class="page-header"><%= yield :page_header %><div id="txt"></div></h3></p>
 			</div>
 		</div>
+</div>
+</div>
 		<%= yield %>
 			
 <script>
@@ -36,7 +41,7 @@ weekdays[6] = "Saturday";
     
     m = checkTime(m);
     s = checkTime(s);
-    document.getElementById('txt').innerHTML =weekdays[day] + "\n" + date +"/"+ month + "/"+ year + "\n" + h+":"+m+":"+s;
+    document.getElementById('txt').innerHTML = weekdays[day] + " "+ date +"/"+ month + "/"+ year + " " + h+":"+m+":"+s;
     var t = setTimeout(function(){startTime()},500);
 }
 
@@ -45,6 +50,16 @@ function checkTime(i) {
     return i;
 }
 </script>
-<div id="txt"></div>
+
+<script>
+    var y = 0;
+requestAnimationFrame(move);
+var body = document.body;
+function move(){
+    y++;
+    body.style.backgroundPosition = '10px ' + y + 'px';
+    requestAnimationFrame(move);
+}
+</script>
 	</body>
 </html>
