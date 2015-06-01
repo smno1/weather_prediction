@@ -7,3 +7,4 @@
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 Location.import_location_data if Location.all.blank?
 Station.get_station if Station.all.blank?
+Station.get_data
