@@ -36,8 +36,9 @@ class PredictionUtil
             recent = read.css("#content").each do |a|
               div = a.css("div").css("a")
               div_temp = div.to_s.match(/\/climate\/.+latest.shtml/).to_s
+              div_temp_new = div_temp.match(/[A-Z0-9]+/).to_s
               if !div_temp.empty?
-                recent_url = "http://www.bom.gov.au#{div_temp}"
+                recent_url = "http://www.bom.gov.au/climate/dwo/201505/html/#{div_temp_new}.201505.shtml"
                 get = Nokogiri::HTML(open(recent_url))
 
                 get.css(".data").each do |x|
@@ -319,7 +320,7 @@ class PredictionUtil
         end
         temp_time = sum/(now_formatedtime + p/6.0)
         prediction_array << ((highestTemperature * (temp_time/max_temp)).abs).round(3)
-        probability_array << (((probability*@probability_poly) - p/deduct_probability).abs).round(3)
+        probability_array << (((probability/3 + @probability_poly*2/3) - p/deduct_probability).abs).round(3)
       end
     result_prediction << prediction_array
     result_prediction << probability_array
@@ -335,7 +336,7 @@ class PredictionUtil
       (0..period-1).each do |p|
         temp_time =  (now_formatedtime + p/6.0)*@regress_return_linear[0] + @regress_return_linear[1]
         prediction_array << ((highestTemperature * (temp_time/max_temp)).abs).round(3)
-        probability_array << (((probability*@probability_linear) - p/deduct_probability).abs).round(3)
+        probability_array << (((probability/3 + @probability_linear*2/3) - p/deduct_probability).abs).round(3)
       end
 
     result_prediction << prediction_array
@@ -356,7 +357,7 @@ class PredictionUtil
       (0..period-1).each do |p|
         temp_time = @regress_return_log[0]*(Math.log(now_formatedtime + p/6.0))+@regress_return_log[1]
         prediction_array << ((highestTemperature * (temp_time/max_temp)).abs).round(3)
-        probability_array << (((probability*@probability_log) - p/deduct_probability).abs).round(3)
+        probability_array << (((probability/3 + @probability_log*2/3) - p/deduct_probability).abs).round(3)
       end
     result_prediction << prediction_array
     result_prediction << probability_array
@@ -371,7 +372,7 @@ class PredictionUtil
       (1..period).each do |p|
         temp_time = Math.exp((now_formatedtime + p/6.0) * @regress_return_exp[0]) + @regress_return_exp[1]
         prediction_array << ((highestTemperature *(temp_time/max_temp)).abs).round(3)
-        probability_array << (((probability*@probability_exp) - p/deduct_probability).abs).round(3)
+        probability_array << (((probability/3 + @probability_exp*2/3) - p/deduct_probability).abs).round(3)
       end
     result_prediction << prediction_array
     result_prediction << probability_array
@@ -391,6 +392,7 @@ class PredictionUtil
     y_data_hi_wind_dir = []
     y_data_hi_wind_speed = []
     y_data_hi_temp = @max_temp_data[location]
+    # if y_data_hi_temp
     y_data_hi_rain = @max_rain[location]
     y_data_hi_wind_dir = @max_wind_dir[location]
     y_data_hi_wind_speed = @max_wind_speed[location]
